@@ -1,17 +1,19 @@
 #-*- coding: utf8 -*-
 """
 .. module::interactive
-    :synopsis: Tools and an option class for interactive parameter entry with additional features
-such as help lookup.
+    :synopsis: Tools and an option class for interactive parameter entry with
+    additional features such as help lookup.
 """
 
 import click
+
+from aiida_verdi.utils.conditional import ConditionalOption
 
 def noninteractive(ctx):
     return ctx.params.get('non_interactive')
 
 
-class InteractiveOption(click.Option):
+class InteractiveOption(ConditionalOption):
     """
     Intercepts certain keyword arguments to circumvent :mod:`click`'s prompting
     behaviour and define a more feature-rich one
@@ -63,7 +65,12 @@ class InteractiveOption(click.Option):
 
     def ctrl_help(self):
         """control behaviour when help is requested from the prompt"""
-        click.echo(self.format_help_message(param))
+        click.echo(self.format_help_message())
+
+    def format_help_message(self):
+        msg = self.help or 'Expecting {}'.format(self.type.name)
+        msg = click.style('\t' + msg, fg='green')
+        return msg
 
     def unacceptably_empty(self, value):
         """check if the value is empty and should not be passed on to conversion"""
@@ -72,6 +79,17 @@ class InteractiveOption(click.Option):
             return False
         else:
             return result
+
+    def full_process_value(self, ctx, value):
+        """
+        catch errors raised by ConditionalOption in order to adress them in
+        the callback
+        """
+        try:
+            value = super(InteractiveOption, self).full_process_value(ctx, value)
+        except click.MissingParameter:
+            pass
+        return value
 
     def safely_convert(self, value, param, ctx):
         """
@@ -111,11 +129,20 @@ class InteractiveOption(click.Option):
         else:
             return value
 
+
     def prompt_callback(self, ctx, param, value):
         """decide wether to iniciate the prompt_loop or not"""
 
         '''a value was given'''
         if value is not None:
+            return self.after_callback(ctx, param, value)
+
+        '''parameter is not reqired anyway'''
+        if not self.is_required(ctx):
+            return self.after_callback(ctx, param, value)
+
+        '''help parameter was given'''
+        if ctx.params.get('help'):
             return self.after_callback(ctx, param, value)
 
         '''no value was given'''
@@ -124,7 +151,7 @@ class InteractiveOption(click.Option):
             value = self.type.convert(value, param, ctx)
             '''if conversion comes up empty, make sure empty is acceptable'''
             if self.unacceptably_empty(value):
-                raise click.BadParameter('Empty')
+                raise click.MissingParameter(param=param)
 
         except Exception as e:
             '''no value was given but a value is required'''
@@ -138,7 +165,6 @@ class InteractiveOption(click.Option):
                 else:
                     '''or reraise'''
                     raise e
-
             '''prompting allowed'''
             value = self.prompt_loop(ctx, param, value)
         return value

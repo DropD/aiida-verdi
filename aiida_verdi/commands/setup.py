@@ -2,7 +2,7 @@ import click
 
 
 @click.command('setup', short_help='Setup an AiiDA profile')
-@click.argument('profile', default='', metavar='PROFILE', type=str)#, help='Profile Name to create/edit')
+@click.argument('profile', default='', metavar='PROFILE', type=str)  #, help='Profile Name to create/edit')
 @click.option('--only-config', is_flag=True, help='Do not create a new user')
 @click.option('--non-interactive', is_flag=True, help='never prompt the user for input, read values from options')
 @click.option('--backend', type=click.Choice(['django', 'sqlalchemy']), help='backend choice (ignored without --non-interactive)')
@@ -17,7 +17,7 @@ import click
 @click.option('--institution', metavar='INSTITUTION', type=str, help='your institution (ignored without --non-interactive)')
 @click.option('--no-password', is_flag=True, help='do not set a password (--non-interactive fails otherwise)')
 @click.option('--repo', metavar='PATH', type=click.Path(), help='data file repository (ignored without --non-interactive)')
-def setup(profile, only_config, non_interactive, backend, email, db_host, db_port, db_name, db_user, db_pass, first_name, last_name, institution, no_password, repo):
+def setup(profile, only_config, non_interactive, backend, email, db_host, db_port, db_name, db_user, db_pass, first_name, last_name, institution, no_password, repo, **kwargs):
     '''
     Setup PROFILE for aiida for the current user
 
@@ -30,12 +30,16 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
     instead expect all parameters to be given as commandline options.
     If values are missing or invalid, the command will fail.
     '''
+    import os
+
     from aiida.common.setup import (create_base_dirs, create_configuration,
                                     set_default_profile, DEFAULT_UMASK,
                                     create_config_noninteractive)
     from aiida.backends import settings as settings_profile
     from aiida.backends.profile import BACKEND_SQLA, BACKEND_DJANGO
-    from aiida.backends.utils import set_backend_type, get_backend_type
+    from aiida.backends.utils import set_backend_type
+    from aiida.cmdline import pass_to_django_manage, execname
+    from aiida.common.exceptions import InvalidOperation
 
     only_user_config = only_config
 
@@ -43,7 +47,7 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
     create_base_dirs()
 
     if settings_profile.AIIDADB_PROFILE and profile:
-        sys.exit('the profile argument cannot be used if verdi is called with -p option: {} and {}'.format(settings_profile.AIIDADB_PROFILE, profile))
+        click.Error('the profile argument cannot be used if verdi is called with -p option: {} and {}'.format(settings_profile.AIIDADB_PROFILE, profile))
     gprofile = settings_profile.AIIDADB_PROFILE or profile
     if gprofile == profile:
         settings_profile.AIIDADB_PROFILE = profile
@@ -59,38 +63,35 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
         try:
             created_conf = create_config_noninteractive(
                 profile=gprofile,
-                backend=kwargs['backend'],
-                email=kwargs['email'],
-                db_host=kwargs['db_host'],
-                db_port=kwargs['db_port'],
-                db_name=kwargs['db_name'],
-                db_user=kwargs['db_user'],
-                db_pass=kwargs.get('db_pass', ''),
-                repo=kwargs['repo'],
+                backend=backend,
+                email=email,
+                db_host=db_host,
+                db_port=db_port,
+                db_name=db_name,
+                db_user=db_user,
+                db_pass=db_pass,
+                repo=repo,
                 force_overwrite=kwargs.get('force_overwrite', False)
             )
         except ValueError as e:
-            click.echo("Error during configuation: {}".format(e.message), err=True)
-            sys.exit(1)
+            raise click.Error("Error during configuation: {}".format(e.message))
         except KeyError as e:
-            sys.exit("--non-interactive requires all values to be given on the commandline! {}".format(e.message), err=True)
+            raise click.Error("--non-interactive requires all values to be given on the commandline! {}".format(e.message))
     else:
         try:
             created_conf = create_configuration(profile=gprofile)
         except ValueError as e:
-            print >> sys.stderr, "Error during configuration: {}".format(
-                e.message)
-            sys.exit(1)
+            raise click.Error("Error during configuration: {}".format(e.message))
 
         # set default DB profiles
         set_default_profile('verdi', gprofile, force_rewrite=False)
         set_default_profile('daemon', gprofile, force_rewrite=False)
 
     if only_user_config:
-        print ("Only user configuration requested, "
-                "skipping the migrate command")
+        print("Only user configuration requested, "
+              "skipping the migrate command")
     else:
-        print "Executing now a migrate command..."
+        click.echo("Executing now a migrate command...")
 
         backend_choice = created_conf['AIIDADB_BACKEND']
         if backend_choice == BACKEND_DJANGO:
@@ -114,7 +115,7 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
 
             try:
                 pass_to_django_manage([execname, 'migrate'],
-                                        profile=gprofile)
+                                      profile=gprofile)
             finally:
                 os.umask(old_umask)
 
@@ -128,7 +129,7 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
 
             from aiida.backends.sqlalchemy.models.base import Base
             from aiida.backends.sqlalchemy.utils import (get_engine,
-                                                            install_tc)
+                                                         install_tc)
             from aiida.common.setup import get_profile_config
 
             # This check should be done more properly
@@ -170,10 +171,10 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
         else:
             raise InvalidOperation("Not supported backend selected.")
 
-    print "Database was created successfully"
+    click.echo("Database was created successfully")
 
     # I create here the default user
-    print "Loading new environment..."
+    click.echo("Loading new environment...")
     if only_user_config:
         from aiida.backends.utils import load_dbenv, is_dbenv_loaded
         # db environment has not been loaded in this case
@@ -184,7 +185,7 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
     from aiida.orm.user import User as AiiDAUser
 
     if not AiiDAUser.search_for_users(email=DEFAULT_AIIDA_USER):
-        print "Installing default AiiDA user..."
+        click.echo("Installing default AiiDA user...")
         nuser = AiiDAUser(email=DEFAULT_AIIDA_USER)
         nuser.first_name = "AiiDA"
         nuser.last_name = "Daemon"
@@ -195,23 +196,24 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
 
     from aiida.common.utils import get_configured_user_email
     email = get_configured_user_email()
-    print "Starting user configuration for {}...".format(email)
+    click.echo("Starting user configuration for {}...".format(email))
     if email == DEFAULT_AIIDA_USER:
-        print "You set up AiiDA using the default Daemon email ({}),".format(
-            email)
-        print "therefore no further user configuration will be asked."
+        click.echo("You set up AiiDA using the default Daemon email ({}),".format(
+            email))
+        click.echo("therefore no further user configuration will be asked.")
     else:
         # Ask to configure the new user
+        from aiida_verdi.commands.user import configure as user_configure
         if not non_interactive:
-            User().user_configure(email)
+            user_configure.invoke()
         else:
             # or don't ask
-            User().user_configure(
-                kwargs['email'],
-                '--first-name='+kwargs.get('first_name'),
-                '--last-name='+kwargs.get('last_name'),
-                '--institution=' + kwargs.get('institution'),
-                '--no-password'
+            user_configure.invoke(
+                email=kwargs['email'],
+                first_name=kwargs.get('first_name'),
+                last_name=kwargs.get('last_name'),
+                institution=kwargs.get('institution'),
+                no_password=True
             )
 
-    print "Setup finished."
+    click.echo("Setup finished.")

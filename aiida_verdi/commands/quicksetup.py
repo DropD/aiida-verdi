@@ -8,7 +8,8 @@ _create_db_command = 'CREATE DATABASE "{}" OWNER "{}"'
 _grant_priv_command = 'GRANT ALL PRIVILEGES ON DATABASE "{}" TO "{}"'
 _get_users_command = "SELECT usename FROM pg_user WHERE usename='{}'"
 
-def _get_pg_access(self):
+
+def _get_pg_access():
     '''
     find out how postgres can be accessed.
 
@@ -21,14 +22,14 @@ def _get_pg_access(self):
     can_subcmd = None
     dbinfo = {'user': None, 'database': 'template1'}
     for pg_user in [None, 'postgres']:
-        if self._try_connect(**dbinfo):
+        if _try_connect(**dbinfo):
             can_connect = True
             dbinfo['user'] = pg_user
             break
 
     # This will work for the default Debian postgres setup
     if not can_connect:
-        if self._try_subcmd(user='postgres'):
+        if _try_subcmd(user='postgres'):
             can_subcmd = True
             dbinfo['user'] = 'postgres'
         else:
@@ -40,13 +41,13 @@ def _get_pg_access(self):
         click.echo('If you feel unsure about the following parameters, first check if postgresql is installed.')
         click.echo('If postgresql is not installed please exit and install it, then run verdi quicksetup again.')
         click.echo('If postgresql is installed, please ask your system manager to provide you with the following parameters:')
-        dbinfo = self._prompt_db_info()
+        dbinfo = _prompt_db_info()
 
     pg_method = None
     if can_connect:
-        pg_method = self._pg_execute_psyco
+        pg_method = _pg_execute_psyco
     elif can_subcmd:
-        pg_method = self._pg_execute_sh
+        pg_method = _pg_execute_sh
 
     result = {
         'method': pg_method,
@@ -54,7 +55,8 @@ def _get_pg_access(self):
     }
     return result
 
-def _prompt_db_info(self):
+
+def _prompt_db_info():
     '''prompt interactively for postgres database connecting details.'''
     access = False
     while not access:
@@ -65,19 +67,20 @@ def _prompt_db_info(self):
         dbinfo['user'] = click.prompt('postgres super user', default='postgres', type=str)
         click.echo('')
         click.echo('trying to access postgres..')
-        if self._try_connect(**dbinfo):
+        if _try_connect(**dbinfo):
             access = True
         else:
             dbinfo['password'] = click.prompt('postgres password of {}'.format(dbinfo['user']), hide_input=True, type=str)
-            if self._try_connect(**dbinfo):
+            if _try_connect(**dbinfo):
                 access = True
             else:
                 click.echo('you may get prompted for a super user password and again for your postgres super user password')
-                if self._try_subcmd(**dbinfo):
+                if _try_subcmd(**dbinfo):
                     access = True
                 else:
                     click.echo('Unable to connect to postgres, please try again')
     return dbinfo
+
 
 def _try_connect(**kwargs):
     '''
@@ -94,6 +97,7 @@ def _try_connect(**kwargs):
         pass
     return success
 
+
 def _try_subcmd(**kwargs):
     '''
     try to run psql in a subprocess.
@@ -102,11 +106,12 @@ def _try_subcmd(**kwargs):
     '''
     success = False
     try:
-        self._pg_execute_sh('\q', **kwargs)
+        _pg_execute_sh('\q', **kwargs)
         success = True
     except:
         pass
     return success
+
 
 def _create_dbuser(dbuser, dbpass, method=None, **kwargs):
     '''
@@ -118,7 +123,8 @@ def _create_dbuser(dbuser, dbpass, method=None, **kwargs):
         where connection_info contains keys for psycopg2.connect.
     :param kwargs: connection info as for psycopg2.connect.
     '''
-    method(self._create_user_command.format(dbuser, dbpass), **kwargs)
+    method(_create_user_command.format(dbuser, dbpass), **kwargs)
+
 
 def _create_db(dbuser, dbname, method=None, **kwargs):
     '''create a database in postgres
@@ -129,8 +135,9 @@ def _create_db(dbuser, dbname, method=None, **kwargs):
         where connection_info contains keys for psycopg2.connect.
     :param kwargs: connection info as for psycopg2.connect.
     '''
-    method(self._create_db_command.format(dbname, dbuser), **kwargs)
-    method(self._grant_priv_command.format(dbname, dbuser), **kwargs)
+    method(_create_db_command.format(dbname, dbuser), **kwargs)
+    method(_grant_priv_command.format(dbname, dbuser), **kwargs)
+
 
 def _pg_execute_psyco(command, **kwargs):
     '''
@@ -151,6 +158,7 @@ def _pg_execute_psyco(command, **kwargs):
             except ProgrammingError:
                 pass
     return output
+
 
 def _pg_execute_sh(command, user='postgres', **kwargs):
     '''
@@ -182,9 +190,11 @@ def _pg_execute_sh(command, user='postgres', **kwargs):
         result = [i for i in result if i]
     return result
 
+
 def _dbuser_exists(dbuser, method, **kwargs):
     '''return True if postgres user with name dbuser exists, False otherwise.'''
-    return bool(method(self._get_users_command.format(dbuser), **kwargs))
+    return bool(method(_get_users_command.format(dbuser), **kwargs))
+
 
 def _check_db_name(dbname, method=None, **kwargs):
     '''looks up if a database with the name exists, prompts for using or creating a differently named one'''
@@ -196,6 +206,7 @@ def _check_db_name(dbname, method=None, **kwargs):
         else:
             create = False
     return dbname, create
+
 
 @click.command(short_help='Quick setup for new users')
 @cliopt.email(prompt='Email Address (for publishing experiments)', help='This email address will be associated with your data and will be exported along with it, should you choose to share any of your work')
@@ -224,7 +235,7 @@ def quicksetup(email, first_name, last_name, institution, backend, db_user, db_u
     aiida_dir = os.path.expanduser(AIIDA_CONFIG_FOLDER)
 
     # access postgres
-    pg_info = self._get_pg_access()
+    pg_info = _get_pg_access()
     pg_execute = pg_info['method']
     dbinfo = pg_info['dbinfo']
 
@@ -252,12 +263,12 @@ def quicksetup(email, first_name, last_name, institution, backend, db_user, db_u
 
     try:
         create = True
-        if not self._dbuser_exists(dbuser, pg_execute, **dbinfo):
-            self._create_dbuser(dbuser, dbpass, pg_execute, **dbinfo)
+        if not _dbuser_exists(dbuser, pg_execute, **dbinfo):
+            _create_dbuser(dbuser, dbpass, pg_execute, **dbinfo)
         else:
-            dbname, create = self._check_db_name(dbname, pg_execute, **dbinfo)
+            dbname, create = _check_db_name(dbname, pg_execute, **dbinfo)
         if create:
-            self._create_db(dbuser, dbname, pg_execute, **dbinfo)
+            _create_db(dbuser, dbname, pg_execute, **dbinfo)
     except Exception as e:
         click.echo('\n'.join([
             'Oops! Something went wrong while creating the database for you.',
@@ -266,9 +277,9 @@ def quicksetup(email, first_name, last_name, institution, backend, db_user, db_u
             'Please run the following commands as the user for PostgreSQL (Ubuntu: $sudo su postgres):',
             '',
             '\t$ psql template1',
-            '\t==> ' + self._create_user_command.format(dbuser, dbpass),
-            '\t==> ' + self._create_db_command.format(dbname, dbuser),
-            '\t==> ' + self._grant_priv_command.format(dbname, dbuser),
+            '\t==> ' + _create_user_command.format(dbuser, dbpass),
+            '\t==> ' + _create_db_command.format(dbname, dbuser),
+            '\t==> ' + _grant_priv_command.format(dbname, dbuser),
             '',
             'Or setup your (OS-level) user to have permissions to create databases and rerun quicksetup.',
             '']))
@@ -326,4 +337,3 @@ def quicksetup(email, first_name, last_name, institution, backend, db_user, db_u
         use_new = click.confirm('The verdi default profile is set to {}, do you want to set the newly created one ({}) as new default? (can be changed back later)'.format(defprof['verdi'], profile_name))
         if use_new:
             set_default_profile('verdi', profile_name, force_rewrite=True)
-

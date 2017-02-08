@@ -21,7 +21,7 @@ class CodeArgument(click.ParamType):
 
         :return: list of tuples with (name, help)
         """
-        from aiida.cmdline.verdic_utils import get_code_data
+        from aiida_verdi.verdic_utils import get_code_data
         names = [(c[1], c[2]) for c in get_code_data() if startswith(c[1], incomplete)]
         pks = [(str(c[0]), c[1]) for c in get_code_data() if startswith(str(c[0]), incomplete)]
         possibilities = names + pks
@@ -44,19 +44,11 @@ class CodeArgument(click.ParamType):
         return 'Possible arguments are:\n\n' + '\n'.join(codes)
 
     @aiida_dbenv
-    def unsafe_convert(self, value, param, ctx):
+    def convert(self, value, param, ctx):
         """check the given value corresponds to a code in the db, raise BadParam else"""
+        from aiida_verdi.verdic_utils import get_code
         codes = [c[0] for c in self.get_possibilities()]
         if value not in codes:
             raise click.BadParameter('Must be a code in you database', param=param)
-        return True, value
 
-    def safe_convert(self, value, param, ctx):
-        """check the given value corresponds to a code in the db, without raising"""
-        result = False, value
-        try:
-            result = self.unsafe_convert(value, param, ctx)
-        except click.BadParameter as e:
-            click.echo(e.format_message())
-            result = False, value
-        return result
+        return get_code(value)

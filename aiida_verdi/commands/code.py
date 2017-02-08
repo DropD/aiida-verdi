@@ -11,6 +11,7 @@ from aiida_verdi.verdic_utils import (
     prompt_with_help, path_validator, computer_name_list,
     computer_validator, multi_line_prompt, create_code,
     InteractiveOption, single_value_prompt)
+from aiida_verdi.utils.interactive import InteractiveOption
 from aiida_verdi.param_types.code import CodeArgument
 from aiida_verdi.param_types.plugin import PluginArgument
 
@@ -126,82 +127,10 @@ def show(code):
     """
     Show information on a given code
     """
-    from aiida_verdi.verdic_utils import get_code
-
-    code = get_code(code)
     click.echo(code.full_text_info)
 
-
-def validate_local(ctx, param, value):
-    """validate and convert string to boolean"""
-    if value in [True, 'True', 'true', 'T']:
-        return True, True
-    elif value in [False, 'False', 'false', 'F']:
-        return True, False
-    else:
-        return False, None
-
-
-def validate_path(prefix_opt=None, is_abs=False, **kwargs):
-    """validate string input as a path"""
-    def decorated_validator(ctx, param, value):
-        """validate string input as path"""
-        from os import path
-        from os.path import expanduser, isabs
-        path_t = click.Path(**kwargs)
-        if isinstance(ctx.obj, dict):
-            if ctx.obj.get('nocheck'):
-                return value or 'UNUSED'
-        if value:
-            try:
-                value = expanduser(value)
-                if prefix_opt:
-                    value = path.join(ctx.params.get(prefix_opt), value)
-                if is_abs and not isabs(value):
-                    return None
-                value = path_t.convert(value, param, ctx)
-            except click.BadParameter as e:
-                if ctx.params.get('non_interactive'):
-                    raise e
-                click.echo(e.format_message(), err=True)
-                value = None
-        return validator_func(ctx, param, value)
-    return decorated_validator
-
-
-def required_if_local(ctx, param):
-    """return the boolean value of the is_local parameter"""
-    return ctx.params.get('is_local')
-
-
-def required_if_remote(ctx, param):
-    """return the inverse boolean value of the is_local parameter"""
-    return not ctx.params.get('is_local')
-
-validate_code_folder = path_validator(
-    expand_user=True, exists=True, file_okay=False, readable=True,
-    required_if=required_if_local
-)
-
-validate_code_rel_path = path_validator(
-    exists=True, dir_okay=False, required_if=required_if_local,
-    prefix_opt='code_folder'
-)
-
-validate_computer = computer_validator(required_if=required_if_remote)
-
-computer_callback = prompt_with_help(
-    prompt='Remote computer name', suggestions=computer_name_list,
-    callback=validate_computer, ni_callback=validate_computer.throw
-)
-
-validate_code_remote_path = path_validator(
-    is_abs=True, dir_okay=False, required_if=required_if_remote
-)
-code_remote_path_callback = prompt_with_help(
-    prompt='Remote absolute path', callback=validate_code_remote_path,
-    ni_callback=validate_code_remote_path.throw
-)
+def validate_computer(value, param, ctx):
+    return computer_validator().throw(value, param, ctx)[1]
 
 prepend_callback = prompt_with_help(
     prompt=('Text to prepend to each command execution\n'
@@ -216,14 +145,14 @@ append_callback = prompt_with_help(
 
 
 @code.command()
-@click.option('--label', is_eager=True, callback=prompt_with_help(prompt='Label'), help='A label to refer to this code')
-@click.option('--description', is_eager=True, prompt='Description', cls=InteractiveOption, help='A human-readable description of this code')
-@click.option('--is-local', is_eager=True, callback=prompt_with_help(prompt='Local', callback=validate_local), help='True or False; if True, then you have to provide a folder with files that will be stored in AiiDA and copied to the remote computers for every calculation submission. if True the code is just a link to a remote computer and an absolute path there')
-@click.option('--input-plugin', prompt='Default input plugin', type=PluginArgument(category='calculations'), cls=InteractiveOption, help='A string of the default input plugin to be used with this code that is recognized by the CalculationFactory. Use he verdi calculation plugins command to get the list of existing plugins')
-@click.option('--code-folder', callback=prompt_with_help(prompt='Folder containing the code', callback=validate_code_folder, ni_callback=validate_code_folder.throw), help='For local codes: The folder on your local computer in which there are files to be stored in the AiiDA repository and then copied over for every submitted calculation')
-@click.option('--code-rel-path', callback=prompt_with_help(prompt='Relative path of the executable', callback=validate_code_rel_path, ni_callback=validate_code_rel_path.throw), help='The relative path of the executable file inside the folder entered in the previous step or in --code-folder')
-@click.option('--computer', callback=computer_callback, help='The name of the computer on which the code resides as stored in the AiiDA database')
-@click.option('--remote-abs-path', callback=code_remote_path_callback, help='The (full) absolute path on the remote machine')
+@options.label(prompt='Label', cls=InteractiveOption, help='A label to refer to this code')
+@options.description(prompt='Description', cls=InteractiveOption, help='A human-readable description of this code')
+@click.option('--installed/--upload', is_eager=True, default=True, prompt='Preinstalled?', cls=InteractiveOption, help=('installed: the executable is installed on the remote computer. ' 'upload: the executable has to be copied onto the computer before execution.'))
+@options.input_plugin(prompt='Default input plugin', cls=InteractiveOption)
+@click.option('--code-folder', prompt='Folder containing the code', type=click.Path(file_okay=False, exists=True, readable=True), required_fn=lambda c: not c.params.get('installed'), cls=InteractiveOption, help=('[if --upload]: folder containing the executable and ' 'all other files necessary for execution of the code'))
+@click.option('--code-rel-path', prompt='Relative path of the executable', type=click.Path(dir_okay=False), required_fn=lambda c: not c.params.get('installed'), cls=InteractiveOption, help=('[if --upload]: The relative path of the executable file inside ' 'the folder entered in the previous step or in --code-folder'))
+@click.option('--computer', prompt='Remote computer', cls=InteractiveOption, required_fn=lambda c: c.params.get('installed'), callback=validate_computer, help=('[if --installed]: The name of the computer on which the ' 'code resides as stored in the AiiDA database'))
+@click.option('--remote-abs-path', prompt='Remote path', type=click.Path(file_okay=False), required_fn=lambda c: c.params.get('installed'), cls=InteractiveOption, help=('[if --installed]: The (full) absolute path on the remote ' 'machine'))
 @click.option('--prepend-text', callback=prepend_callback, help='Text to prepend to each command execution. FOR INSTANCE, MODULES TO BE LOADED FOR THIS CODE. This is a multiline string, whose content will be prepended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
 @click.option('--append-text', callback=append_callback, help='Text to append to each command execution. This is a multiline string, whose content will be appended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
 @options.non_interactive()
@@ -232,6 +161,9 @@ append_callback = prompt_with_help(
 def setup(**kwargs):
     """create and store a code on the commandline"""
     from aiida.common.exceptions import ValidationError
+
+    click.echo(kwargs['computer'])
+    load_dbenv_if_not_loaded()
 
     code = create_code(**kwargs)
 

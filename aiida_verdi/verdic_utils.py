@@ -76,7 +76,7 @@ def create_code(**kwargs):
 
     :kwarg label: label
     :kwarg description: description
-    :kwarg is_local: switch wether to use local_executable or remote_computer_exec
+    :kwarg installed: switch wether to use local_executable or remote_computer_exec
     :kwarg input_plugin: name for the default input plugin
     :kwarg code_folder: folder containing the code if is_local == True
     :kwarg code_rel_path: the relative path from code_folder to the executable
@@ -88,10 +88,11 @@ def create_code(**kwargs):
     import os
     from os.path import realpath
     from os.path import join as pjoin
+
     from aiida.orm import Code as AiidaOrmCode
 
     '''local / remote code'''
-    is_local = kwargs['is_local']
+    is_local = not kwargs['installed']
     if is_local:
         '''local code'''
         code_folder = kwargs['code_folder']
@@ -433,15 +434,6 @@ class computer_validator(base_validator):
         if value not in computers:
             raise click.BadParameter('{} is not a computer in your database!'.format(value), param=param)
         return Computer.get(value)
-
-
-class input_plugin_validator(base_validator):
-    """check that the given argument corresponds to an available input plugin"""
-    def validate(self, ctx, param, value):
-        pluginlist = input_plugin_list()
-        if value not in pluginlist:
-            raise click.BadParameter('{} is not an input plugin!'.format(value))
-        return value
 
 
 class InteractiveOption(click.Option):

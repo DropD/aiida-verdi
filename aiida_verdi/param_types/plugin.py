@@ -5,7 +5,7 @@ click parameter type for Plugins
 import click
 from click_completion import startswith
 
-from aiida_verdi.verdic_utils import aiida_dbenv, input_plugin_validator
+from aiida_verdi.verdic_utils import aiida_dbenv
 
 
 class PluginArgument(click.ParamType):
@@ -23,7 +23,6 @@ class PluginArgument(click.ParamType):
             self.get_all_plugins = self.old_get_parsers
         else:
             raise ValueError('unsupported plugin category for cmdline args')
-        self.validator = input_plugin_validator()
 
     def get_possibilities(self, incomplete=''):
         """return a list of plugins starting with incomplete"""
@@ -51,18 +50,9 @@ class PluginArgument(click.ParamType):
     def get_missing_message(self, param):
         return 'Possible arguments are:\n\n' + '\n'.join(self.get_all_plugins())
 
-    def unsafe_convert(self, value, param, ctx):
+    def convert(self, value, param, ctx):
         """check value vs. possible plugins, raising BadParameter on fail """
-        # ~ if not value in self.get_all_plugins():
-            # ~ raise click.BadParameter('Must be an installed plugin')
-        # ~ return value
-        return self.validator.throw(ctx, param, value)
-
-    def safe_convert(self, value, param, ctx):
-        """check value vs. possible plugins without raising"""
-        # ~ try:
-            # ~ value = self.unsafe_convert(value, param, ctx)
-        # ~ except click.BadParameter as e:
-            # ~ click.echo(e.format_message())
-        # ~ return value
-        return self.validator(ctx, param, value)
+        pluginlist = self.get_possibilities()
+        if value not in pluginlist:
+            raise click.BadParameter('{} is not a plugin for category {}'.format(value, self.category))
+        return value

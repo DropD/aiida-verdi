@@ -32,6 +32,7 @@ def run(ctx, group, groupname, grouponly, exclude, excludesubclasses, include, i
     """
     Execute an AiiDA script, given by ScriptName. All additional ARGS are passed to the script
     """
+    import aiida
     from aiida.backends.utils import load_dbenv,is_dbenv_loaded
     from aiida.cmdline.commands.shell import default_modules_list
     from aiida.orm.autogroup import Autogroup
@@ -85,12 +86,5 @@ def run(ctx, group, groupname, grouponly, exclude, excludesubclasses, include, i
                 # Pass only globals_dict
                 exec (f, globals_dict)
                 # print sys.argv
-        except SystemExit as e:
-            ## Script called sys.exit()
-            # print sys.argv, "(sys.exit {})".format(e.message)
-
-            ## Note: remember to re-raise, the exception to have
-            ## the error code properly returned at the end!
-            raise
         finally:
             f.close()
