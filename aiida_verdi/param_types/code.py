@@ -9,7 +9,7 @@ from click_spinner import spinner as cli_spinner
 from aiida_verdi.verdic_utils import aiida_dbenv
 
 
-class CodeArgument(click.ParamType):
+class CodeParam(click.ParamType):
     """
     handle verification and tab-completion (relies on click-completion) for Code db entries
     """
@@ -45,7 +45,12 @@ class CodeArgument(click.ParamType):
 
     @aiida_dbenv
     def convert(self, value, param, ctx):
-        """check the given value corresponds to a code in the db, raise BadParam else"""
+        """
+        check the given value corresponds to a code in the db, raise BadParam else
+
+        gets the corresponding code object from the database for a pk or name
+        and returns that
+        """
         from aiida_verdi.verdic_utils import get_code
         codes = [c[0] for c in self.get_possibilities()]
         if value not in codes:

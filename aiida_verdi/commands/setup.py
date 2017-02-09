@@ -1,3 +1,5 @@
+#-*- coding: utf8 -*-
+"""verdi setup command"""
 import click
 
 
@@ -88,14 +90,14 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
         set_default_profile('daemon', gprofile, force_rewrite=False)
 
     if only_user_config:
-        print("Only user configuration requested, "
-              "skipping the migrate command")
+        click.echo("Only user configuration requested, "
+                   "skipping the migrate command")
     else:
         click.echo("Executing now a migrate command...")
 
         backend_choice = created_conf['AIIDADB_BACKEND']
         if backend_choice == BACKEND_DJANGO:
-            print("...for Django backend")
+            click.echo("...for Django backend")
             # The correct profile is selected within load_dbenv.
             # Setting os.umask here since sqlite database gets created in
             # this step.
@@ -122,7 +124,7 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
             set_backend_type(BACKEND_DJANGO)
 
         elif backend_choice == BACKEND_SQLA:
-            print("...for SQLAlchemy backend")
+            click.echo("...for SQLAlchemy backend")
             from aiida import is_dbenv_loaded, load_dbenv
             if not is_dbenv_loaded():
                 load_dbenv()
@@ -203,7 +205,7 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
         click.echo("therefore no further user configuration will be asked.")
     else:
         # Ask to configure the new user
-        from aiida_verdi.commands.user import configure as user_configure
+        from aiida.cmdline.commands.user import configure as user_configure
         if not non_interactive:
             user_configure.invoke()
         else:

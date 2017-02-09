@@ -8,15 +8,16 @@ from click_completion import startswith
 from aiida_verdi.verdic_utils import aiida_dbenv
 
 
-class PluginArgument(click.ParamType):
+class PluginParam(click.ParamType):
     """
     handle verification, completion for plugin arguments
     """
     name = 'aiida plugin'
 
-    def __init__(self, category=None, *args, **kwargs):
+    def __init__(self, category=None, available=True, *args, **kwargs):
         self.category = category
-        super(PluginArgument, self).__init__(*args, **kwargs)
+        self.must_available = available
+        super(PluginParam, self).__init__(*args, **kwargs)
         if self.category == 'calculations':
             self.get_all_plugins = self.old_get_calculations
         elif self.category == 'parsers':
@@ -45,14 +46,17 @@ class PluginArgument(click.ParamType):
 
     def complete(self, ctx, incomplete):
         """return possible completions"""
-        return self.get_possibilities(incomplete=incomplete)
+        return [(p, '') for p in self.get_possibilities(incomplete=incomplete)]
 
     def get_missing_message(self, param):
         return 'Possible arguments are:\n\n' + '\n'.join(self.get_all_plugins())
 
     def convert(self, value, param, ctx):
         """check value vs. possible plugins, raising BadParameter on fail """
-        pluginlist = self.get_possibilities()
-        if value not in pluginlist:
-            raise click.BadParameter('{} is not a plugin for category {}'.format(value, self.category))
+        if not value:
+            raise click.BadParameter('plugin name cannot be empty')
+        if self.must_available:
+            pluginlist = self.get_possibilities()
+            if value not in pluginlist:
+                raise click.BadParameter('{} is not a plugin for category {}'.format(value, self.category))
         return value

@@ -9,7 +9,9 @@ import click
 
 from aiida_verdi.utils.conditional import ConditionalOption
 
+
 def noninteractive(ctx):
+    """check context for non_interactive flag"""
     return ctx.params.get('non_interactive')
 
 
@@ -68,7 +70,17 @@ class InteractiveOption(ConditionalOption):
         click.echo(self.format_help_message())
 
     def format_help_message(self):
+        """
+        format the message to be displayed for in-prompt help.
+
+        gives a list of possibilities for parameter types that support completion
+        """
         msg = self.help or 'Expecting {}'.format(self.type.name)
+        choices = getattr(self.type, 'complete', lambda x, y: [])(None, '')
+        if choices:
+            msg += '\n\tone of:\n'
+            choice_table = ['\t\t{:<12} {}'.format(*choice) for choice in choices]
+            msg += '\n'.join(choice_table)
         msg = click.style('\t' + msg, fg='green')
         return msg
 
@@ -129,7 +141,6 @@ class InteractiveOption(ConditionalOption):
         else:
             return value
 
-
     def prompt_callback(self, ctx, param, value):
         """decide wether to iniciate the prompt_loop or not"""
 
@@ -154,7 +165,13 @@ class InteractiveOption(ConditionalOption):
                 raise click.MissingParameter(param=param)
 
         except Exception as e:
-            '''no value was given but a value is required'''
+            '''
+            no value was given but a value is required
+
+            this needs to be Exception because generally convert does not
+            check for None and is allowed to raise any exception when
+            encountering it
+            '''
 
             '''no prompting allowed'''
             if noninteractive(ctx):

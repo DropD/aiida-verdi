@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from os import path
+"""setup.py for :py:module:`aiida_verdi`"""
 from setuptools import setup, find_packages
 
 __copyright__ = u"Copyright (c), This file is part of the AiiDA platform. For further information please visit http://www.aiida.net/. All rights reserved."
 __license__ = "MIT license, see LICENSE.txt file."
-
 
 
 if __name__ == '__main__':
@@ -22,6 +21,9 @@ if __name__ == '__main__':
             'Programming Language :: Python :: 2',
         ],
         install_requires=['aiida', 'click', 'click-plugins', 'click-completion', 'click-spinner'],
+        extras_require={
+            'tests': ['pytest']
+        },
         packages=find_packages(),
         entry_points={
             # following are AiiDA plugin entry points:

@@ -1,6 +1,8 @@
 #-*- coding: utf8 -*-
 """
 click parameter type that registers a callback for prompting with help
+
+!!!! this module is obsolete and will be removed !!!!
 """
 
 import click

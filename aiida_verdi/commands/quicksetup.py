@@ -1,6 +1,10 @@
+#-*- coding: utf8 -*-
+"""
+verdi quicksetup command
+"""
 import click
 
-from aiida.backends.profile import (BACKEND_DJANGO, BACKEND_SQLA)
+from aiida.backends.profile import BACKEND_SQLA
 from aiida_verdi import options as cliopt
 
 _create_user_command = 'CREATE USER "{}" WITH PASSWORD \'{}\''
@@ -93,7 +97,7 @@ def _try_connect(**kwargs):
     try:
         connect(**kwargs)
         success = True
-    except:
+    except Exception:
         pass
     return success
 
@@ -106,9 +110,9 @@ def _try_subcmd(**kwargs):
     '''
     success = False
     try:
-        _pg_execute_sh('\q', **kwargs)
+        _pg_execute_sh(r'\q', **kwargs)
         success = True
-    except:
+    except Exception:
         pass
     return success
 
@@ -228,6 +232,7 @@ def quicksetup(email, first_name, last_name, institution, backend, db_user, db_u
     Creates a 'aiidadb_qs_<username>' database (prompts to use or change the name if already exists).
     Makes sure not to overwrite existing databases or profiles without prompting for confirmation.),
     '''
+    import os
     from aiida.cmdline.commands2.setup import setup
     from aiida.common.setup import create_base_dirs, AIIDA_CONFIG_FOLDER
     create_base_dirs()

@@ -5,7 +5,7 @@ standard options for consistency throughout the verdi commandline
 import click
 
 from aiida.backends.profile import (BACKEND_DJANGO, BACKEND_SQLA)
-from aiida_verdi.param_types.plugin import PluginArgument
+from aiida_verdi.param_types.plugin import PluginParam
 
 
 class overridable_option(object):
@@ -25,15 +25,16 @@ class overridable_option(object):
         """
         override kwargs (no name changes) and return option
         """
-        kwargs.update(self.kwargs)
-        return click.option(*self.args, **kwargs)
+        kw_copy = self.kwargs.copy()
+        kw_copy.update(kwargs)
+        return click.option(*self.args, **kw_copy)
 
 label = overridable_option('--label', help='short text to be used as a label')
 
 description = overridable_option('--description', help='(text) description')
 
 input_plugin = overridable_option('--input-plugin', help='input plugin string',
-                                  type=PluginArgument(category='calculations'))
+                                  type=PluginParam(category='calculations'))
 
 computer = overridable_option('--computer',
                               help=('The name of the computer as stored in '

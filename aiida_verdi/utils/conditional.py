@@ -33,4 +33,5 @@ class ConditionalOption(click.Option):
         return value
 
     def is_required(self, ctx):
+        """runs the given check on the context to determine requiredness"""
         return self.required_fn(ctx)
