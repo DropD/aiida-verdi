@@ -6,14 +6,12 @@ import sys
 import click
 
 from aiida_verdi import options
-from aiida_verdi.verdic_utils import (
-    load_dbenv_if_not_loaded,
-    prompt_with_help,
-    computer_validator, multi_line_prompt, create_code,
-    InteractiveOption)
+from aiida_verdi.verdic_utils import (load_dbenv_if_not_loaded,
+                                      create_code, InteractiveOption)
 from aiida_verdi.utils.interactive import InteractiveOption
 from aiida_verdi.param_types.code import CodeParam
 from aiida_verdi.param_types.plugin import PluginParam
+from aiida_verdi.param_types.computer import ComputerParam
 
 
 @click.group()
@@ -24,8 +22,7 @@ def code():
 
 
 @code.command('list')
-@click.option('-c', '--computer', help='filter codes for a computer')
-#@click.option('-p', '--plugin', type=PluginParam('calculations'), help='filter codes for a plugin')
+@options.computer(type=ComputerParam(convert=False), help='filter codes for a computer')
 @options.input_plugin(type=PluginParam(category='calculations', available=False))
 @click.option('-A', '--all-users', is_flag=True, help='show codes of all users')
 @click.option('-o', '--show-owner', is_flag=True, help='show owner information')
@@ -131,22 +128,6 @@ def show(_code):
     click.echo(_code.full_text_info)
 
 
-def validate_computer(value, param, ctx):
-    """validation callback for computers, wraps around utils.computer_validator.throw"""
-    return computer_validator().throw(value, param, ctx)[1]
-
-prepend_callback = prompt_with_help(
-    prompt=('Text to prepend to each command execution\n'
-            'FOR INSTANCE MODULES TO BE LOADED FOR THIS CODE'),
-    prompt_loop=multi_line_prompt
-)
-
-append_callback = prompt_with_help(
-    prompt='Text to append to each command execution',
-    prompt_loop=multi_line_prompt
-)
-
-
 @code.command()
 @options.label(prompt='Label', cls=InteractiveOption, help='A label to refer to this code')
 @options.description(prompt='Description', cls=InteractiveOption, help='A human-readable description of this code')
@@ -154,10 +135,10 @@ append_callback = prompt_with_help(
 @options.input_plugin(prompt='Default input plugin', cls=InteractiveOption)
 @click.option('--code-folder', prompt='Folder containing the code', type=click.Path(file_okay=False, exists=True, readable=True), required_fn=lambda c: not c.params.get('installed'), cls=InteractiveOption, help=('[if --upload]: folder containing the executable and ' 'all other files necessary for execution of the code'))
 @click.option('--code-rel-path', prompt='Relative path of the executable', type=click.Path(dir_okay=False), required_fn=lambda c: not c.params.get('installed'), cls=InteractiveOption, help=('[if --upload]: The relative path of the executable file inside ' 'the folder entered in the previous step or in --code-folder'))
-@click.option('--computer', prompt='Remote computer', cls=InteractiveOption, required_fn=lambda c: c.params.get('installed'), callback=validate_computer, help=('[if --installed]: The name of the computer on which the ' 'code resides as stored in the AiiDA database'))
+@options.computer(prompt='Remote computer', cls=InteractiveOption, required_fn=lambda c: c.params.get('installed'), help=('[if --installed]: The name of the computer on which the ' 'code resides as stored in the AiiDA database'))
 @click.option('--remote-abs-path', prompt='Remote path', type=click.Path(file_okay=False), required_fn=lambda c: c.params.get('installed'), cls=InteractiveOption, help=('[if --installed]: The (full) absolute path on the remote ' 'machine'))
-@click.option('--prepend-text', callback=prepend_callback, help='Text to prepend to each command execution. FOR INSTANCE, MODULES TO BE LOADED FOR THIS CODE. This is a multiline string, whose content will be prepended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
-@click.option('--append-text', callback=append_callback, help='Text to append to each command execution. This is a multiline string, whose content will be appended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
+@options.prepend_text()
+@options.append_text()
 @options.non_interactive()
 @options.dry_run()
 @options.debug()
@@ -177,15 +158,15 @@ def setup(**kwargs):
     if not kwargs.get('dry_run'):
         '''store'''
         try:
-            code.store()
+            the_code.store()
         except ValidationError as e:
             print "Unable to store the code: {}. Exiting...".format(e.message)
             sys.exit(1)
 
-        print "Code '{}' successfully stored in DB.".format(code.label)
-        print "pk: {}, uuid: {}".format(code.pk, code.uuid)
+        click.echo("Code '{}' successfully stored in DB.".format(the_code.label))
+        click.echo("pk: {}, uuid: {}".format(the_code.pk, the_code.uuid))
     else:
         '''dry-run, so only display'''
         click.echo('The following code was created:')
-        click.echo(code.full_text_info)
+        click.echo(the_code.full_text_info)
         click.echo('Recieved --dry-run, therefore not storing the code')

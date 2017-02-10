@@ -6,6 +6,8 @@ import click
 
 from aiida.backends.profile import (BACKEND_DJANGO, BACKEND_SQLA)
 from aiida_verdi.param_types.plugin import PluginParam
+from aiida_verdi.param_types.computer import ComputerParam
+from aiida_verdi.verdic_utils import prompt_with_help, multi_line_prompt
 
 
 class overridable_option(object):
@@ -29,14 +31,14 @@ class overridable_option(object):
         kw_copy.update(kwargs)
         return click.option(*self.args, **kw_copy)
 
-label = overridable_option('--label', help='short text to be used as a label')
+label = overridable_option('-L', '--label', help='short text to be used as a label')
 
-description = overridable_option('--description', help='(text) description')
+description = overridable_option('-D', '--description', help='(text) description')
 
 input_plugin = overridable_option('--input-plugin', help='input plugin string',
                                   type=PluginParam(category='calculations'))
 
-computer = overridable_option('--computer',
+computer = overridable_option('-c', '--computer', type=ComputerParam(),
                               help=('The name of the computer as stored in '
                                     'the AiiDA database'))
 
@@ -46,19 +48,19 @@ backend = overridable_option('--backend', type=click.Choice([BACKEND_DJANGO, BAC
 email = overridable_option('--email', metavar='EMAIL', type=str,
                            help='valid email address for the user')
 
-db_host = overridable_option('--db_host', metavar='HOSTNAME', type=str,
+db_host = overridable_option('--db-host', metavar='HOSTNAME', type=str,
                              help='database hostname')
 
-db_port = overridable_option('--db_port', metavar='PORT', type=int,
+db_port = overridable_option('--db-port', metavar='PORT', type=int,
                              help='database port')
 
-db_name = overridable_option('--db_name', metavar='DBNAME', type=str,
+db_name = overridable_option('--db-name', metavar='DBNAME', type=str,
                              help='database name')
 
-db_user = overridable_option('--db_user', metavar='DBUSER', type=str,
+db_user = overridable_option('--db-user', metavar='DBUSER', type=str,
                              help='database username')
 
-db_pass = overridable_option('--db_pass', metavar='DBPASS', type=str,
+db_pass = overridable_option('--db-pass', metavar='DBPASS', type=str,
                              help='password for username to access the database')
 
 first_name = overridable_option('--first-name', metavar='FIRST', type=str,
@@ -81,3 +83,18 @@ dry_run = overridable_option('--dry-run', is_flag=True, is_eager=True,
 
 debug = overridable_option('--debug', is_flag=True, is_eager=True,
                            help='print debug information')
+
+prepend_callback = prompt_with_help(
+    prompt=('Text to prepend to each command execution\n'
+            'FOR INSTANCE MODULES TO BE LOADED FOR THIS CODE'),
+    prompt_loop=multi_line_prompt
+)
+
+prepend_text = overridable_option('--prepend-text', callback=prepend_callback, help='Text to prepend to each command execution. FOR INSTANCE, MODULES TO BE LOADED FOR THIS CODE. This is a multiline string, whose content will be prepended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
+
+append_callback = prompt_with_help(
+    prompt='Text to append to each command execution',
+    prompt_loop=multi_line_prompt
+)
+
+append_text = overridable_option('--append-text', callback=append_callback, help='Text to append to each command execution. This is a multiline string, whose content will be appended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')

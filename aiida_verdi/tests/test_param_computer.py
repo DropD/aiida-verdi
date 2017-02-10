@@ -33,15 +33,29 @@ def test_missing():
     assert 'Missing option "--comp"' in result.output
 
 
-def test_valid():
+def test_valid_convert():
     """
     scenario: comp
-    action: call with option valid
+    action: call with valid computer name or pk
     behaviour: cmd gets valid Computer
     """
     cmd, runner = setup_comp_opt_cmd()
-    comps = ComputerParam().complete()
+    comps = [i[0] for i in ComputerParam().complete()]
     assert comps
-    result = runner.invoke(cmd, [comps[0]])
+    result = runner.invoke(cmd, ['--comp={}'.format(comps[0])])
     assert not result.exception
-    assert result.output == 'Computer'
+    assert result.output == 'Computer\n'
+
+
+def test_valid_noconvert():
+    """
+    scenario: comp but no conversion
+    action: call with valid computer name or pk
+    behaviour: cmd gets name (str) or pk (int)
+    """
+    cmd, runner = setup_comp_opt_cmd(convert=False)
+    comps = [i[0] for i in ComputerParam().complete()]
+    assert comps
+    result = runner.invoke(cmd, ['--comp={}'.format(comps[0])])
+    assert not result.exception
+    assert result.output == 'int\n' or result.output == 'str\n'

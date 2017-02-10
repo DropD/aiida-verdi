@@ -27,13 +27,19 @@ class ComputerParam(click.ParamType):
         """
         tries to get a computer from the db (if convert=True).
         """
-        computers = self.complete(ctx)
+        computers = [i[0] for i in self.complete(ctx)]
         if not value:
             raise click.BadParameter('computer parameter cannot be empty')
         if value not in computers:
             raise click.BadParameter('{} is not a name or pk of a computer!'.format(value))
+        '''try convert to int (pk)'''
+        try:
+            value = int(value)
+        except ValueError:
+            pass
         if self.get_from_db:
             from aiida.orm.computer import Computer
+            '''get computer from db'''
             value = Computer.get(value)
         return value
 
@@ -51,7 +57,7 @@ class ComputerParam(click.ParamType):
             results += [(i, None) for i in names]
             qb = QueryBuilder()
             qb.append(type='computer', project=['id', 'name'])
-            results += [str(i) for i in qb.iterall() if startswith(str(i[0]), incomplete)]
+            results += [(str(i[0]), i[1]) for i in qb.iterall() if startswith(str(i[0]), incomplete)]
             return results
 
     def get_missing_message(self, param):
