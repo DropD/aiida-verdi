@@ -33,5 +33,10 @@ if __name__ == '__main__':
                 'quicksetup = aiida_verdi.commands.quicksetup:quicksetup',
                 'code = aiida_verdi.commands.code:code'
             ],
+            'aiida.cmdline.code': [
+                'list = aiida_verdi.commands.code.list:_list',
+                'show = aiida_verdi.commands.code.show:show',
+                'setup = aiida_verdi.commands.code.setup:setup'
+            ],
         },
     )
