@@ -10,7 +10,7 @@ from aiida_verdi.utils.interactive import InteractiveOption
 
 
 @click.command()
-@options.label(prompt='Label', cls=InteractiveOption, help='A label to refer to this code')
+@options.label(prompt='Label', cls=InteractiveOption, help='The name for this code')
 @options.description(prompt='Description', cls=InteractiveOption, help='A human-readable description of this code')
 @click.option('--installed/--upload', is_eager=False, default=True, prompt='Preinstalled?', cls=InteractiveOption, help=('installed: the executable is installed on the remote computer. ' 'upload: the executable has to be copied onto the computer before execution.'))
 @options.input_plugin(prompt='Default input plugin', cls=InteractiveOption)

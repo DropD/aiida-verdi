@@ -1,6 +1,6 @@
 #-*- coding: utf8 -*-
 """
-verdi code commands
+Computer :py:mod:`click` group
 """
 import click
 from click_plugins import with_plugins
@@ -9,7 +9,7 @@ from pkg_resources import iter_entry_points
 
 @with_plugins(iter_entry_points('aiida.cmdline.code'))
 @click.group()
-def code():
+def computer():
     """
-    manage codes in your AiiDA database.
+    commandline interface for managing AiiDA codes
     """
