@@ -1,15 +1,15 @@
 #-*- coding: utf8 -*-
 """
-Computer :py:mod:`click` group
+verdi plugin command group
 """
 import click
 from click_plugins import with_plugins
 from pkg_resources import iter_entry_points
 
 
-@with_plugins(iter_entry_points('aiida.cmdline.computer'))
+@with_plugins(iter_entry_points('aiida.cmdline.plugin'))
 @click.group()
-def computer():
+def plugin():
     """
-    commandline interface for managing AiiDA codes
+    commandline interface for plugin management
     """

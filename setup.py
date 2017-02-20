@@ -31,12 +31,22 @@ if __name__ == '__main__':
                 'run = aiida_verdi.commands.run:run',
                 'setup = aiida_verdi.commands.setup:setup',
                 'quicksetup = aiida_verdi.commands.quicksetup:quicksetup',
-                'code = aiida_verdi.commands.code:code'
+                'code = aiida_verdi.commands.code:code',
+                'computer = aiida_verdi.commands.computer:computer',
+                'data = aiida_verdi.commands.data:data',
+                'plugin = aiida_verdi.commands.plugin:plugin',
             ],
             'aiida.cmdline.code': [
                 'list = aiida_verdi.commands.code.list:_list',
                 'show = aiida_verdi.commands.code.show:show',
                 'setup = aiida_verdi.commands.code.setup:setup'
             ],
+            'aiida.cmdline.computer': [
+                'setup = aiida_verdi.commands.computer.setup:setup'
+            ],
+            'aiida.cmdline.plugin': [
+                'search = aiida_verdi.commands.plugin.search:search',
+                'info = aiida_verdi.commands.plugin.info:info'
+            ]
         },
     )

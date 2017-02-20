@@ -42,3 +42,15 @@ def test_code_setup_help():
     # ~ )
     # ~ assert not result.exception
     # ~ assert result.output == ''
+
+
+def test_code_setup_ni():
+    """
+    action: verdi code setup --non-interactive
+    behaviour: fail without prompting
+    """
+    from aiida_verdi.commands.code import code
+    runner = CliRunner()
+    result = runner.invoke(code, ['setup', '--non-interactive'])
+    assert result.exception
+    assert 'Missing option' in result.output

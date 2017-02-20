@@ -22,6 +22,10 @@ class PluginParam(click.ParamType):
             self.get_all_plugins = self.old_get_calculations
         elif self.category == 'parsers':
             self.get_all_plugins = self.old_get_parsers
+        elif self.category == 'transports':
+            self.get_all_plugins = self.old_get_transports
+        elif self.category == 'schedulers':
+            self.get_all_plugins = self.old_get_schedulers
         else:
             raise ValueError('unsupported plugin category for cmdline args')
 
@@ -43,6 +47,20 @@ class PluginParam(click.ParamType):
         from aiida.common.pluginloader import existing_plugins
         from aiida.parsers import Parser
         return existing_plugins(Parser, 'aiida.parsers.plugins')
+
+    @aiida_dbenv
+    def old_get_transports(self):
+        """return all available transport plugins"""
+        from aiida.common.pluginloader import existing_plugins
+        from aiida.transport import Transport
+        return existing_plugins(Transport, 'aiida.transport.plugins')
+
+    @aiida_dbenv
+    def old_get_schedulers(self):
+        """return all available scheduler plugins"""
+        from aiida.common.pluginloader import existing_plugins
+        from aiida.scheduler import Scheduler
+        return existing_plugins(Scheduler, 'aiida.scheduler.plugins')
 
     def complete(self, ctx, incomplete):
         """return possible completions"""
