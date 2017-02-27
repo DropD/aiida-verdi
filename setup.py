@@ -20,7 +20,7 @@ if __name__ == '__main__':
             'Programming Language :: Python',
             'Programming Language :: Python :: 2',
         ],
-        install_requires=['aiida', 'click', 'click-plugins', 'click-completion', 'click-spinner'],
+        install_requires=['aiida', 'click', 'click-plugins', 'click-completion', 'click-spinner', 'requests'],
         extras_require={
             'tests': ['pytest']
         },
