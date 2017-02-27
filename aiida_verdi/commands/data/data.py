@@ -1,15 +1,15 @@
 #-*- coding: utf8 -*-
 """
-Computer :py:mod:`click` group
+verdi data command group
 """
 import click
 from click_plugins import with_plugins
 from pkg_resources import iter_entry_points
 
 
-@with_plugins(iter_entry_points('aiida.cmdline.computer'))
+@with_plugins(iter_entry_points('aiida.cmdline.data'))
 @click.group()
-def computer():
+def data():
     """
-    commandline interface for managing AiiDA codes
+    verdi commandline interface for working with Data nodes
     """
