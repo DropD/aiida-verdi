@@ -18,7 +18,7 @@ def _list(computer, input_plugin, all_users, show_owner, all_codes):
     """
     List available codes
     """
-    from aiida_verdi.verdic_utils import print_list_res
+    from aiida_verdi.verdic_utils import print_list_res, load_dbenv_if_not_loaded
     load_dbenv_if_not_loaded()
 
     computer_filter = computer
@@ -104,3 +104,4 @@ def _list(computer, input_plugin, all_users, show_owner, all_codes):
                   project=["email"],
                   filters=qb_user_filters)
         print_list_res(qb, show_owner)
+        click.echo('TEST')

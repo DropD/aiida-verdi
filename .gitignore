@@ -11,5 +11,8 @@
 
 /venv*/
 /.idea/
+/build
+/dist
+*.prof
 *.egg-info/
 .cache
