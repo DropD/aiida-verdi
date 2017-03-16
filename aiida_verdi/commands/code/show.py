@@ -5,11 +5,11 @@ verdi code show
 import click
 
 from aiida_verdi import options
-from aiida_verdi.param_types.code import CodeParam
+from aiida_verdi.arguments import code
 
 
 @click.command()
-@click.argument('_code', 'code', metavar='CODE', type=CodeParam())
+@code()
 def show(_code):
     """
     Show information on a given code

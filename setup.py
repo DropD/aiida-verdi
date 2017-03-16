@@ -1,3 +1,4 @@
+import fastentrypoints
 # -*- coding: utf-8 -*-
 """setup.py for :py:module:`aiida_verdi`"""
 from setuptools import setup, find_packages
@@ -26,6 +27,7 @@ if __name__ == '__main__':
         },
         packages=find_packages(),
         entry_points={
+            'console_scripts': ['verdi-exp = aiida_verdi.cli:main'],
             # following are AiiDA plugin entry points:
             'aiida.cmdline': [
                 'run = aiida_verdi.commands.run:run',

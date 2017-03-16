@@ -57,3 +57,19 @@ class CodeParam(click.ParamType):
             raise click.BadParameter('Must be a code in you database', param=param)
 
         return get_code(value)
+
+
+class CodeNameParam(click.ParamType):
+    """
+    verify there is no @ sign in the name
+    """
+    name = 'code label'
+
+    def convert(self, value, param, ctx):
+        """
+        check if valid code name
+        """
+        value = super(CodeNameParam, self).convert(value, param, ctx)
+        if '@' in value:
+            raise click.BadParameter("Code labels may not contain the '@' sign", param=param)
+        return value

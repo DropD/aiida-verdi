@@ -1,4 +1,4 @@
-#-*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 """
 standard options for consistency throughout the verdi commandline
 """
@@ -30,6 +30,7 @@ class overridable_option(object):
         kw_copy = self.kwargs.copy()
         kw_copy.update(kwargs)
         return click.option(*self.args, **kw_copy)
+
 
 label = overridable_option('-L', '--label', help='short text to be used as a label')
 
