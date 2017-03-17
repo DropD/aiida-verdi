@@ -76,6 +76,9 @@ institution = overridable_option('--institution', metavar='INSTITUTION', type=st
 repo = overridable_option('--repo', metavar='PATH', type=click.Path(),
                           help='data file repository')
 
+remote_abs_path = overridable_option('--remote-abs-path', type=click.Path(file_okay=False),
+                                     help=('[if --installed]: The (full) absolute path on the remote ' 'machine'))
+
 non_interactive = overridable_option('--non-interactive', is_flag=True, is_eager=True,
                                      help='noninteractive mode: never prompt the user for input')
 

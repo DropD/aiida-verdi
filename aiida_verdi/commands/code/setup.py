@@ -18,7 +18,7 @@ from aiida_verdi.utils.interactive import InteractiveOption
 @click.option('--code-rel-path', prompt='Relative path of the executable', type=click.Path(dir_okay=False), required_fn=lambda c: not c.params.get('installed'), cls=InteractiveOption, help=('[if --upload]: The relative path of the executable file inside ' 'the folder entered in the previous step or in --code-folder'))
 @options.computer(prompt='Remote computer', cls=InteractiveOption, required_fn=lambda c: c.params.get('installed'), help=('[if --installed]: The name of the computer on which the ' 'code resides as stored in the AiiDA database'))
 
-@click.option('--remote-abs-path', prompt='Remote path', type=click.Path(file_okay=False), required_fn=lambda c: c.params.get('installed'), cls=InteractiveOption, help=('[if --installed]: The (full) absolute path on the remote ' 'machine'))
+@options.remote_abs_path(prompt='Remote path', required_fn=lambda c: c.params.get('installed'), cls=InteractiveOption, help=('[if --installed]: The (full) absolute path on the remote ' 'machine'))
 @options.prepend_text()
 @options.append_text()
 @options.non_interactive()

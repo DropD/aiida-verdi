@@ -75,6 +75,8 @@ class PluginParam(click.ParamType):
             raise click.BadParameter('plugin name cannot be empty')
         if self.must_available:
             pluginlist = self.get_possibilities()
+            if param.default:
+                pluginlist.append(param.default)
             if value not in pluginlist:
                 raise click.BadParameter('{} is not a plugin for category {}'.format(value, self.category))
         return value
