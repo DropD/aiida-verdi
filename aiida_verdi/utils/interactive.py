@@ -214,14 +214,14 @@ class InteractiveOption(ConditionalOption):
         if not self.is_required(ctx):
             return self.after_callback(ctx, param, value)
 
-        '''help parameter was given'''
+        '''help option was passed on the cmdline'''
         if ctx.params.get('help'):
             return self.after_callback(ctx, param, value)
 
         '''no value was given'''
         try:
             '''try to convert None'''
-            value = self.after_callback(self.type.convert(value, param, ctx))
+            value = self.after_callback(ctx, param, self.type.convert(value, param, ctx))
             '''if conversion comes up empty, make sure empty is acceptable'''
             if self.unacceptably_empty(value):
                 raise click.MissingParameter(param=param)
@@ -237,12 +237,12 @@ class InteractiveOption(ConditionalOption):
 
             '''no prompting allowed'''
             if noninteractive(ctx):
-                '''either get a default value and return '''
+                '''either get a default value and return ...'''
                 default = self._get_default(ctx) or self.default
                 if default is not None:
                     return self.type.convert(default, param, ctx)
                 else:
-                    '''or reraise'''
+                    '''... or reraise'''
                     raise e
             '''prompting allowed'''
             value = self.prompt_loop(ctx, param, value)

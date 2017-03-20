@@ -14,6 +14,8 @@ from aiida_verdi.param_types.plugin import PluginParam
 def comp_not_exists(ctx, param, value):
     from aiida.common.exceptions import NotExistent
     from aiida_verdi.utils.aiidadb import get_computer
+    if not value:
+        raise click.MissingParameter(param=param)
     try:
         get_computer(name=value)
         msg = '{} exists. '.format(value)
@@ -21,6 +23,8 @@ def comp_not_exists(ctx, param, value):
         sys.exit(msg)
     except NotExistent:
         return value
+    except TypeError:
+        raise click.BadParameter('must be a valid string', param=param)
 
 
 @click.command()
@@ -39,7 +43,7 @@ def comp_not_exists(ctx, param, value):
 @options.dry_run()
 def setup(dry_run=None, non_interactive=None, **kwargs):
     """
-    verdi compute
+    add compute resources
     """
     from aiida_verdi.utils.aiidadb import create_computer
     load_dbenv_if_not_loaded()

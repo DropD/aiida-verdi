@@ -16,7 +16,7 @@ def simple_command(**kwargs):
     kwargs get relayed to the option
     """
     @click.command()
-    @click.option('--opt', prompt='Opt', required=False, cls=InteractiveOption, **kwargs)
+    @click.option('--opt', prompt='Opt', cls=InteractiveOption, **kwargs)
     @options.non_interactive()
     def cmd(opt, non_interactive):
         """test command for InteractiveOption"""

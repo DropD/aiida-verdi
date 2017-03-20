@@ -37,6 +37,6 @@ def test_computer_setup_ni():
     """
     from aiida_verdi.commands.computer import computer
     runner = CliRunner()
-    result = runner.invoke(computer, ['setup', '--non-interactive'])
+    result = runner.invoke(computer, ['setup', '--non-interactive', '--dry-run'])
     assert result.exception
     assert 'Missing option' in result.output
