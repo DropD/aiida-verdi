@@ -76,7 +76,7 @@ institution = overridable_option('--institution', metavar='INSTITUTION', type=st
 repo = overridable_option('--repo', metavar='PATH', type=click.Path(),
                           help='data file repository')
 
-remote_abs_path = overridable_option('--remote-abs-path', type=click.Path(file_okay=False),
+remote_abs_path = overridable_option('--remote-abs-path', type=click.Path(file_okay=True),
                                      help=('[if --installed]: The (full) absolute path on the remote ' 'machine'))
 
 non_interactive = overridable_option('--non-interactive', is_flag=True, is_eager=True,
@@ -94,11 +94,15 @@ prepend_callback = prompt_with_help(
     prompt_loop=multi_line_prompt
 )
 
-prepend_text = overridable_option('--prepend-text', callback=prepend_callback, help='Text to prepend to each command execution. FOR INSTANCE, MODULES TO BE LOADED FOR THIS CODE. This is a multiline string, whose content will be prepended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
+# ~ prepend_text = overridable_option('--prepend-text', callback=prepend_callback, help='Text to prepend to each command execution. FOR INSTANCE, MODULES TO BE LOADED FOR THIS CODE. This is a multiline string, whose content will be prepended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
+prepend_text = overridable_option('--prepend-text', type=str, default='',
+                                  help='Text to prepend to each command execution. FOR INSTANCE, MODULES TO BE LOADED FOR THIS CODE. This is a multiline string, whose content will be prepended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
 
 append_callback = prompt_with_help(
     prompt='Text to append to each command execution',
     prompt_loop=multi_line_prompt
 )
 
-append_text = overridable_option('--append-text', callback=append_callback, help='Text to append to each command execution. This is a multiline string, whose content will be appended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
+# ~ append_text = overridable_option('--append-text', callback=append_callback, help='Text to append to each command execution. This is a multiline string, whose content will be appended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')
+append_text = overridable_option('--append-text', type=str, default='',
+                                 help='Text to append to each command execution. This is a multiline string, whose content will be appended inside the submission script after the real execution of the job. It is your responsibility to write proper bash code!')

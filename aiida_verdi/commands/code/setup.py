@@ -17,27 +17,34 @@ from aiida_verdi.utils.interactive import InteractiveOption
 @click.option('--code-folder', prompt='Folder containing the code', type=click.Path(file_okay=False, exists=True, readable=True), required_fn=lambda c: not c.params.get('installed'), cls=InteractiveOption, help=('[if --upload]: folder containing the executable and ' 'all other files necessary for execution of the code'))
 @click.option('--code-rel-path', prompt='Relative path of the executable', type=click.Path(dir_okay=False), required_fn=lambda c: not c.params.get('installed'), cls=InteractiveOption, help=('[if --upload]: The relative path of the executable file inside ' 'the folder entered in the previous step or in --code-folder'))
 @options.computer(prompt='Remote computer', cls=InteractiveOption, required_fn=lambda c: c.params.get('installed'), help=('[if --installed]: The name of the computer on which the ' 'code resides as stored in the AiiDA database'))
-
 @options.remote_abs_path(prompt='Remote path', required_fn=lambda c: c.params.get('installed'), cls=InteractiveOption, help=('[if --installed]: The (full) absolute path on the remote ' 'machine'))
 @options.prepend_text()
 @options.append_text()
 @options.non_interactive()
 @options.dry_run()
 @options.debug()
-def setup(**kwargs):
+def setup(non_interactive, dry_run, **kwargs):
     """create and store a code on the commandline"""
     import sys
     from aiida.common.exceptions import ValidationError
 
-    click.echo(kwargs['computer'])
+    pre = kwargs['prepend_text'] or ''
+    post = kwargs['append_text'] or ''
+    if (not non_interactive) and ((not pre) or (not post)):
+        '''let the user edit the pre and post execution scripts'''
+        from aiida_verdi.utils.mlinput import edit_pre_post
+        pre, post = edit_pre_post(pre, post, kwargs)
+        kwargs['prepend_text'] = pre
+        kwargs['append_text'] = post
 
+    '''actually create the code'''
     the_code = create_code(**kwargs)
 
     '''Enforcing the code to be not hidden.'''
     the_code._reveal()
 
     '''store or display'''
-    if not kwargs.get('dry_run'):
+    if not dry_run:
         '''store'''
         try:
             the_code.store()

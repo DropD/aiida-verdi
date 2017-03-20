@@ -1,4 +1,4 @@
-#-*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 """
 .. module::interactive
     :synopsis: Tools and an option class for interactive parameter entry with
@@ -13,6 +13,19 @@ from aiida_verdi.utils.conditional import ConditionalOption
 def noninteractive(ctx):
     """check context for non_interactive flag"""
     return ctx.params.get('non_interactive')
+
+
+def string_wrapper(s, max_length=100):
+    words = s.split(' ')
+    lines = ['']
+    for w in words:
+        if not lines[-1]:
+            lines[-1] = w
+        elif len(lines[-1]) + len(w) + 1 <= max_length:
+            lines[-1] += ' ' + w
+        else:
+            lines.append(w)
+    return lines
 
 
 class InteractiveOption(ConditionalOption):
@@ -37,6 +50,7 @@ class InteractiveOption(ConditionalOption):
         """
         '''intercept prompt kwarg'''
         self._prompt = kwargs.pop('prompt', None)
+        self._editor = kwargs.pop('editor', None)
 
         '''super'''
         super(InteractiveOption, self).__init__(param_decls=param_decls, **kwargs)
@@ -52,6 +66,11 @@ class InteractiveOption(ConditionalOption):
 
         '''set controll strings that trigger special features from the input prompt'''
         self._ctrl = {'?': self.ctrl_help}
+
+        '''set prompting type'''
+        self.prompt_loop = self.simple_prompt_loop
+        if self._editor:
+            self.prompt_loop = self.editor_loop
 
     def get_default(self, ctx):
         """disable :mod:`click` from circumventing prompting when a default value exists"""
@@ -117,7 +136,7 @@ class InteractiveOption(ConditionalOption):
             click.echo(e.message)
         return successful, value
 
-    def prompt_loop(self, ctx, param, value):
+    def simple_prompt_loop(self, ctx, param, value):
         """prompt until successful conversion. dispatch control sequences"""
         while 1:
             '''prompt'''
@@ -134,6 +153,49 @@ class InteractiveOption(ConditionalOption):
                 if successful:
                     return value
 
+    def editor_loop(self, ctx, param, value):
+        """
+        open an editor analog to git commit for multiline input but in a loop until the result is verified.
+        This method is currently in development and may be instable / incorrect.
+        """
+        while 1:
+            '''prompt'''
+            marker = '#= All lines beginning with "#=" will be ignored'
+            helper = [marker, self._prompt] + string_wrapper(self.format_help_message(), 50)
+            template = '\n' + '\n#= '.join(helper)
+            inserttxt = template
+            if isinstance(self._editor, list):
+                '''editor will be used to set muliple values'''
+                multiedit = True
+                inserttxt = '#= ' + '\n\n#= '.join(self._editor) + '\n' + template
+            mlinput = click.edit(inserttxt)
+            click.echo('')
+            click.echo(mlinput)
+            if mlinput:
+                '''editor was saved and quitted'''
+                value = mlinput.replace(template, '')
+                click.echo('')
+                click.echo(value)
+                if multiedit:
+                    '''separate the values using the given separator lines'''
+                    values = []
+                    seplines = self._editor[::-1]
+                    # ~ value = value.split(seplines.pop())[1]
+                    for sep in seplines:
+                        value, l = value.split('#= ' + sep)
+                        click.echo('{} <-> {}'.format(value, l))
+                        values.append(l.strip())
+                        click.echo(values)
+                    value = values[::-1]
+            if self.unacceptably_empty(value):
+                '''reopen editor without trying to convert'''
+                continue
+            else:
+                '''try to convert, reopen editor if unsuccessful'''
+                successful, value = self.safely_convert(value, param, ctx)
+                if successful:
+                    return value
+
     def after_callback(self, ctx, param, value):
         """if a callback was registered on init, call it and return it's value"""
         if self._after_callback:
@@ -142,7 +204,7 @@ class InteractiveOption(ConditionalOption):
             return value
 
     def prompt_callback(self, ctx, param, value):
-        """decide wether to iniciate the prompt_loop or not"""
+        """decide wether to initiate the prompt_loop or not"""
 
         '''a value was given'''
         if value is not None:
@@ -159,7 +221,7 @@ class InteractiveOption(ConditionalOption):
         '''no value was given'''
         try:
             '''try to convert None'''
-            value = self.type.convert(value, param, ctx)
+            value = self.after_callback(self.type.convert(value, param, ctx))
             '''if conversion comes up empty, make sure empty is acceptable'''
             if self.unacceptably_empty(value):
                 raise click.MissingParameter(param=param)
