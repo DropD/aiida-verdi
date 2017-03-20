@@ -27,5 +27,5 @@ class overridable_argument(object):
         return click.argument(*self.args, **kw_copy)
 
 
-code = overridable_argument('_code', 'code', metavar='CODE', type=CodeParam())
+code = overridable_argument('code', metavar='CODE', type=CodeParam())
 codelabel = overridable_argument('name', type=CodeNameParam())

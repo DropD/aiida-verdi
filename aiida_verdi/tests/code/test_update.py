@@ -23,3 +23,14 @@ def test_code_update_help():
     assert '--prepend-text' in result.output
     assert '--dry-run' in result.output
     assert '--non-interactive' in result.output
+
+def test_code_update_ni():
+    """
+    action: verdi code setup --non-interactive --dry-run
+    behaviour: fail without prompting
+    """
+    from aiida_verdi.commands.code import code
+    runner = CliRunner()
+    result = runner.invoke(code, ['update', '--non-interactive', '--dry-run'])
+    assert result.exception
+    assert 'Missing argument' in result.output

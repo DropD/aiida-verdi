@@ -16,3 +16,4 @@
 *.prof
 *.egg-info/
 .cache
+.coverage

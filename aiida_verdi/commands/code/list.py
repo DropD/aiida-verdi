@@ -14,7 +14,7 @@ from aiida_verdi.param_types.plugin import PluginParam
 @click.option('-A', '--all-users', is_flag=True, help='show codes of all users')
 @click.option('-o', '--show-owner', is_flag=True, help='show owner information')
 @click.option('-a', '--all-codes', is_flag=True, help='show hidden codes')
-def _list(computer, input_plugin, all_users, show_owner, all_codes):
+def list_(computer, input_plugin, all_users, show_owner, all_codes):
     """
     List available codes
     """

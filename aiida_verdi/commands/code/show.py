@@ -4,14 +4,13 @@ verdi code show
 """
 import click
 
-from aiida_verdi import options
-from aiida_verdi.arguments import code
+from aiida_verdi import arguments, options
 
 
 @click.command()
-@code()
-def show(_code):
+@arguments.code()
+def show(code):
     """
     Show information on a given code
     """
-    click.echo(_code.full_text_info)
+    click.echo(code.full_text_info)

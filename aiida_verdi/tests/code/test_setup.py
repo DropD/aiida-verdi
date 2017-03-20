@@ -46,11 +46,11 @@ def test_code_setup_help():
 
 def test_code_setup_ni():
     """
-    action: verdi code setup --non-interactive
+    action: verdi code setup --non-interactive --dry-run
     behaviour: fail without prompting
     """
     from aiida_verdi.commands.code import code
     runner = CliRunner()
-    result = runner.invoke(code, ['setup', '--non-interactive'])
+    result = runner.invoke(code, ['setup', '--non-interactive', 'dry-run'])
     assert result.exception
     assert 'Missing option' in result.output

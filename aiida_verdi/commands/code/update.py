@@ -4,33 +4,32 @@ verdi code update
 """
 import click
 
-from aiida_verdi.arguments import code
-from aiida_verdi import options
+from aiida_verdi import arguments, options
 from aiida_verdi.param_types.code import CodeNameParam
 from aiida_verdi.param_types.plugin import PluginParam
 from aiida_verdi.utils.interactive import InteractiveOption
 
 
-def modification_comment(code_):
+def modification_comment(code):
     from datetime import datetime
     cmt = [
         'Code modified on {}'.format(datetime.now()),
         'Old configuration was:',
-        'label: {}'.format(code_.label),
-        'description: {}'.format(code_.description),
-        'input_plugin_name: {}'.format(code_.get_input_plugin_name()),
-        'is_local: {}'.format(code_.is_local())
+        'label: {}'.format(code.label),
+        'description: {}'.format(code.description),
+        'input_plugin_name: {}'.format(code.get_input_plugin_name()),
+        'is_local: {}'.format(code.is_local())
     ]
-    if code_.is_local():
+    if code.is_local():
         cmt.append('local_executable: {}'.format(code.get_local_executable()))
     else:
         cmt.extend([
-            'computer: {}'.format(code_.get_computer()),
-            'remote_exec_path: {}'.format(code_.get_remote_exec_path())
+            'computer: {}'.format(code.get_computer()),
+            'remote_exec_path: {}'.format(code.get_remote_exec_path())
         ])
     cmt.extend([
-        'prepend_text: {}'.format(code_.get_prepend_text()),
-        'append_text: {}'.format(code_.get_append_text())
+        'prepend_text: {}'.format(code.get_prepend_text()),
+        'append_text: {}'.format(code.get_append_text())
     ])
     return '\n'.join(cmt)
 
@@ -44,7 +43,7 @@ def opt_prompt(ctx, params, opt, prompt, default):
 
 @click.command()
 @click.pass_context
-@code()
+@arguments.code()
 @options.label(type=CodeNameParam(), help='The new name for CODE', cls=InteractiveOption)
 @options.description(help='The new description for CODE', cls=InteractiveOption)
 @options.input_plugin(help='The new input plugin for CODE', cls=InteractiveOption)
@@ -53,7 +52,7 @@ def opt_prompt(ctx, params, opt, prompt, default):
 @options.append_text()
 @options.dry_run()
 @options.non_interactive()
-def update(ctx, _code, dry_run, non_interactive, **kwargs):
+def update(ctx, code, dry_run, non_interactive, **kwargs):
     """
     Update CODE, change the information stored for it.
 
@@ -65,14 +64,14 @@ def update(ctx, _code, dry_run, non_interactive, **kwargs):
     # ~ prescr = kwargs['append_text']
     # ~ postscr = kwargs['prepend_text']
     # ~ remabs = kwargs['remote_abs_path']
-    mod_cmt = modification_comment(_code)
+    mod_cmt = modification_comment(code)
 
     '''if interactive, prompt for missing values'''
     if not non_interactive:
         if dry_run:
             click.echo('This is a dry run, no changes will be committed')
 
-        if _code.has_children:
+        if code.has_children:
             click.echo("***********************************")
             click.echo("|                                 |")
             click.echo("|            WARNING!             |")
@@ -84,15 +83,15 @@ def update(ctx, _code, dry_run, non_interactive, **kwargs):
         '''interactively prompt for the missing options'''
         cliparms = {i.name: i for i in update.params}
         if not kwargs['label']:
-           kwargs['label'] = opt_prompt(ctx, cliparms, 'label', 'Label', _code.label)
+           kwargs['label'] = opt_prompt(ctx, cliparms, 'label', 'Label', code.label)
         if not kwargs['description']:
-           kwargs['description'] = opt_prompt(ctx, cliparms, 'description', 'Description', _code.description)
+           kwargs['description'] = opt_prompt(ctx, cliparms, 'description', 'Description', code.description)
         if not kwargs['input_plugin']:
-            kwargs['input_plugin'] = opt_prompt(ctx, cliparms, 'input_plugin', 'Input plugin', _code.get_input_plugin_name())
-        if not _code.is_local():
+            kwargs['input_plugin'] = opt_prompt(ctx, cliparms, 'input_plugin', 'Input plugin', code.get_input_plugin_name())
+        if not code.is_local():
             '''computer cannot be changed but remote executable path can'''
             if not kwargs['remote_abs_path']:
-                old = _code.get_remote_exec_path()
+                old = code.get_remote_exec_path()
                 kwargs['remote_abs_path'] = opt_prompt(ctx, cliparms, 'remote_abs_path', 'Remote path', old)
                 if not kwargs['remote_abs_path'] == old:
                     '''make sure the user understands this should not be
@@ -115,29 +114,29 @@ def update(ctx, _code, dry_run, non_interactive, **kwargs):
 
     '''summarize the changes'''
     if kwargs['label']:
-        click.echo('Label: {} -> {}'.format(_code.label, kwargs['label']))
+        click.echo('Label: {} -> {}'.format(code.label, kwargs['label']))
     if kwargs['description']:
-        click.echo('Description: {} -> {}'.format(_code.description, kwargs['description']))
+        click.echo('Description: {} -> {}'.format(code.description, kwargs['description']))
     if kwargs['input_plugin']:
-        click.echo('Input plugin: {} -> {}'.format(_code.get_input_plugin_name(), kwargs['input_plugin']))
+        click.echo('Input plugin: {} -> {}'.format(code.get_input_plugin_name(), kwargs['input_plugin']))
     if kwargs['prepend_text']:
-        click.echo('Prepend text:\n{}\n->\n{}'.format(_code.get_prepend_text(), kwargs['prepend_text']))
+        click.echo('Prepend text:\n{}\n->\n{}'.format(code.get_prepend_text(), kwargs['prepend_text']))
     if kwargs['append_text']:
-        click.echo('Append text:\n{}\n->\n{}'.format(_code.get_append_text(), kwargs['append_text']))
+        click.echo('Append text:\n{}\n->\n{}'.format(code.get_append_text(), kwargs['append_text']))
 
     '''update the code attributes'''
     if not dry_run:
-        _code.label = kwargs['label'] or _code.label
-        _code.description = kwargs['description'] or _code.description
-        _code.set_input_plugin_name(kwargs['input_plugin']) or _code.get_input_plugin_name()
-        _code.set_prepend_text(kwargs['prepend_text']) or _code.get_prepend_text()
-        _code.set_append_text(kwargs['append_text']) or _code.get_append_text()
+        code.label = kwargs['label'] or code.label
+        code.description = kwargs['description'] or code.description
+        code.set_input_plugin_name(kwargs['input_plugin']) or code.get_input_plugin_name()
+        code.set_prepend_text(kwargs['prepend_text']) or code.get_prepend_text()
+        code.set_append_text(kwargs['append_text']) or code.get_append_text()
 
         if kwargs['remote_abs_path']:
             from aiida.backends.djsite.db.models import DbAttribute
             DbAttribute.set_value_for_node(code.dbnode, 'remote_exec_path', kwargs['remote_abs_path'])
 
         '''add modification comment'''
-        _code.add_comment(mod_cmt, user=get_automatic_user())
+        code.add_comment(mod_cmt, user=get_automatic_user())
     else:
         click.echo('Code not modified (--dry-run recieved)')

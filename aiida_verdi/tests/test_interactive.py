@@ -200,10 +200,74 @@ def test_non_interactive():
 def test_non_interactive_default():
     """
     scenario: InteractiveOption, invoked with only --non-interactive
-    behaviout: fail
+    behaviour: fail
     """
     cmd = simple_command(default='default')
     runner = CliRunner()
     result = runner.invoke(cmd, ['--non-interactive'])
     assert not result.exception
     assert result.output == 'default\n'
+
+
+def user_callback(ctx, param, value):
+    if not value:
+        return -1
+    elif value != 42:
+        raise click.BadParameter('invalid', param=param)
+    else:
+        return value
+
+
+def test_after_callback_valid():
+    """
+    scenario: InteractiveOption with a user callback
+    action: invoke with valid value
+    behaviour: user callback runs & succeeds
+    """
+    cmd = simple_command(callback=user_callback, type=int)
+    runner = CliRunner()
+    result = runner.invoke(cmd, ['--opt=42'])
+    assert not result.exception
+    assert result.output == '42\n'
+
+
+def test_after_callback_invalid():
+    """
+    scenario: InteractiveOption with a user callback
+    action: invoke with invalid value of right type
+    behaviour: user callback runs & succeeds
+    """
+    cmd = simple_command(callback=user_callback, type=int)
+    runner = CliRunner()
+    result = runner.invoke(cmd, ['--opt=234234'])
+    assert result.exception
+    assert 'Invalid value' in result.output
+    assert 'invalid' in result.output
+
+
+def test_after_callback_wrong_typ():
+    """
+    scenario: InteractiveOption with a user callback
+    action: invoke with invalid value of wrong type
+    behaviour: user callback does not run
+    """
+    cmd = simple_command(callback=user_callback, type=int)
+    runner = CliRunner()
+    result = runner.invoke(cmd, ['--opt=bla'])
+    assert result.exception
+    assert 'Invalid value' in result.output
+    assert 'bla' in result.output
+
+
+def test_after_callback_empty():
+    """
+    scenario: InteractiveOption with a user callback
+    action: invoke with invalid value of wrong type
+    behaviour: user callback does not run
+    """
+    cmd = simple_command(callback=user_callback, type=int)
+    runner = CliRunner()
+    result = runner.invoke(cmd, ['--opt='])
+    assert result.exception
+    assert 'Invalid value' in result.output
+    assert not 'empty' in result.output
