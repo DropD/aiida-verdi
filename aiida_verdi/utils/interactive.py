@@ -247,3 +247,16 @@ class InteractiveOption(ConditionalOption):
             '''prompting allowed'''
             value = self.prompt_loop(ctx, param, value)
         return value
+
+
+def opt_prompter(ctx, cmd, givenkwargs):
+    cmdparams = {i.name: i for i in cmd.params}
+    def opt_prompt(opt, prompt, default):
+        if not givenkwargs[opt]:
+            optobj = cmdparams[opt]
+            optobj._prompt = prompt
+            optobj.default = default
+            return optobj.prompt_loop(ctx, optobj, givenkwargs[opt])
+        else:
+            return givenkwargs[opt]
+    return opt_prompt

@@ -7,7 +7,7 @@ import click
 from aiida_verdi import arguments, options
 from aiida_verdi.param_types.code import CodeNameParam
 from aiida_verdi.param_types.plugin import PluginParam
-from aiida_verdi.utils.interactive import InteractiveOption
+from aiida_verdi.utils.interactive import InteractiveOption, opt_prompter
 
 
 def modification_comment(code):
@@ -33,13 +33,13 @@ def modification_comment(code):
     ])
     return '\n'.join(cmt)
 
-
-def opt_prompt(ctx, params, opt, prompt, default):
-    optobj = params[opt]
-    optobj._prompt = prompt
-    optobj.default = default
-    return optobj.prompt_loop(ctx, optobj, None)
-
+# ~
+# ~ def opt_prompt(ctx, params, opt, prompt, default):
+    # ~ optobj = params[opt]
+    # ~ optobj._prompt = prompt
+    # ~ optobj.default = default
+    # ~ return optobj.prompt_loop(ctx, optobj, None)
+# ~
 
 @click.command()
 @click.pass_context
@@ -81,29 +81,25 @@ def update(ctx, code, dry_run, non_interactive, **kwargs):
             click.echo("***********************************")
 
         '''interactively prompt for the missing options'''
-        cliparms = {i.name: i for i in update.params}
-        if not kwargs['label']:
-           kwargs['label'] = opt_prompt(ctx, cliparms, 'label', 'Label', code.label)
-        if not kwargs['description']:
-           kwargs['description'] = opt_prompt(ctx, cliparms, 'description', 'Description', code.description)
-        if not kwargs['input_plugin']:
-            kwargs['input_plugin'] = opt_prompt(ctx, cliparms, 'input_plugin', 'Input plugin', code.get_input_plugin_name())
+        opt_prompt = opt_prompter(ctx, update, kwargs)
+        kwargs['label'] = opt_prompt('label', 'Label', code.label)
+        kwargs['description'] = opt_prompt('description', 'Description', code.description)
+        kwargs['input_plugin'] = opt_prompt('input_plugin', 'Input plugin', code.get_input_plugin_name())
         if not code.is_local():
             '''computer cannot be changed but remote executable path can'''
-            if not kwargs['remote_abs_path']:
-                old = code.get_remote_exec_path()
-                kwargs['remote_abs_path'] = opt_prompt(ctx, cliparms, 'remote_abs_path', 'Remote path', old)
-                if not kwargs['remote_abs_path'] == old:
-                    '''make sure the user understands this should not be
-                    used to change the executable, only it's location'''
-                    if not click.confirm('Is it the same executable, just in a different path?'):
-                        kwargs['remote_abs_path'] = None
-                        click.echo('***********')
-                        click.echo('| WARNING |')
-                        click.echo('***********')
-                        click.echo('Changing the executable itself would break provenance!')
-                        click.echo('Not changing remote path')
-                        click.echo('Create a new code instead!')
+            old = code.get_remote_exec_path()
+            kwargs['remote_abs_path'] = opt_prompt('remote_abs_path', 'Remote path', old)
+            if not kwargs['remote_abs_path'] == old:
+                '''make sure the user understands this should not be
+                used to change the executable, only it's location'''
+                if not click.confirm('Is it the same executable, just in a different path?'):
+                    kwargs['remote_abs_path'] = None
+                    click.echo('***********')
+                    click.echo('| WARNING |')
+                    click.echo('***********')
+                    click.echo('Changing the executable itself would break provenance!')
+                    click.echo('Not changing remote path')
+                    click.echo('Create a new code instead!')
         '''local code's folder and relative path cannot be changed'''
         if (not kwargs['prepend_text']) or (not kwargs['append_text']):
             '''use editor to change pre and post execution scripts'''

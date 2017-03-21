@@ -8,23 +8,8 @@ import sys
 from aiida_verdi.verdic_utils import load_dbenv_if_not_loaded
 from aiida_verdi import options
 from aiida_verdi.utils.interactive import InteractiveOption
+from aiida_verdi.utils.aiidadb import comp_not_exists
 from aiida_verdi.param_types.plugin import PluginParam
-
-
-def comp_not_exists(ctx, param, value):
-    from aiida.common.exceptions import NotExistent
-    from aiida_verdi.utils.aiidadb import get_computer
-    if not value:
-        raise click.MissingParameter(param=param)
-    try:
-        get_computer(name=value)
-        msg = '{} exists. '.format(value)
-        msg += 'Use verdi computer update to modify existing computers'
-        sys.exit(msg)
-    except NotExistent:
-        return value
-    except TypeError:
-        raise click.BadParameter('must be a valid string', param=param)
 
 
 @click.command()
