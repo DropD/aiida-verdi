@@ -51,6 +51,8 @@ class InteractiveOption(ConditionalOption):
         '''intercept prompt kwarg'''
         self._prompt = kwargs.pop('prompt', None)
         self._editor = kwargs.pop('editor', None)
+        if kwargs.get('required', None):
+            kwargs['required_fn'] = noninteractive
 
         '''super'''
         super(InteractiveOption, self).__init__(param_decls=param_decls, **kwargs)
@@ -249,13 +251,13 @@ class InteractiveOption(ConditionalOption):
         return value
 
 
-def opt_prompter(ctx, cmd, givenkwargs):
+def opt_prompter(ctx, cmd, givenkwargs, oldvalues=None):
     cmdparams = {i.name: i for i in cmd.params}
-    def opt_prompt(opt, prompt, default):
+    def opt_prompt(opt, prompt, default=None):
         if not givenkwargs[opt]:
             optobj = cmdparams[opt]
             optobj._prompt = prompt
-            optobj.default = default
+            optobj.default = default or oldvalues.get(opt)
             return optobj.prompt_loop(ctx, optobj, givenkwargs[opt])
         else:
             return givenkwargs[opt]

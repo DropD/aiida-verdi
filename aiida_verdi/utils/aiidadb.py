@@ -68,10 +68,12 @@ def create_computer(**kwargs):
 
 
 def comp_not_exists(ctx, param, value):
+    import click
     from aiida.common.exceptions import NotExistent
     from aiida_verdi.utils.aiidadb import get_computer
     if not value:
-        raise click.MissingParameter(param=param)
+        return value
+        # ~ raise click.MissingParameter(param=param)
     try:
         get_computer(name=value)
         msg = '{} exists. '.format(value)

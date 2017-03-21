@@ -50,26 +50,39 @@ def confirmation_warning(computer, maxlen=75):
 @options.append_text()
 @options.non_interactive()
 @options.dry_run()
-@click.pass_ctx
+@click.pass_context
 def update(ctx, computer, dry_run, non_interactive, **kwargs):
     """
     Update (change) an AiiDA computer that has not yet been used
     """
+    old_values = {
+        'label': computer.name,
+        'description': computer.description,
+        'hostname': computer.hostname,
+        'enabled': computer.is_enabled(),
+        'transport': computer.get_transport_type(),
+        'scheduler': computer.get_scheduler_type(),
+        'workdir': computer.get_workdir(),
+        'mpirun': ' '.join(computer.get_mpirun_command()),
+        'ppm': computer.get_default_mpiprocs_per_machine(),
+        'prepend_text': computer.get_prepend_text(),
+        'append_text': computer.get_append_text()
+    }
     if not non_interactive:
         if not click.confirm(confirmation_warning(computer)):
             return 0
 
         '''interactively prompt for missing options'''
-        opt_prompt = opt_prompter(ctx, update, kwargs)
-        kwargs['label'] = opt_prompt('label', 'Label', computer.label)
-        kwargs['description'] = opt_prompt('description', 'Description', computer.description)
-        kwargs['hostname'] = opt_prompt('hostname', 'Fully qualified hostname', computer.hostname)
-        kwargs['enabled'] = opt_prompt('enabled', 'Enabled', computer.is_enabled())
-        kwargs['transport'] = opt_prompt('transport', 'Transport type', computer.get_transport_type())
-        kwargs['scheduler'] = opt_prompt('scheduler', 'Scheduler type', computer.get_scheduler_type())
-        kwargs['workdir'] = opt_prompt('workdir', 'AiiDA work directory', computer.get_workdir())
-        kwargs['mpirun'] = opt_prompt('mpirun', 'mpirun command', computer.get_mpirun_command())
-        kwargs['ppm'] = opt_prompt('ppm', 'Default number of CPUs per machine', computer.get_default_mpiprocs_per_machine())
+        opt_prompt = opt_prompter(ctx, update, kwargs, old_values)
+        kwargs['label'] = opt_prompt('label', 'Label')
+        kwargs['description'] = opt_prompt('description', 'Description')
+        kwargs['hostname'] = opt_prompt('hostname', 'Fully qualified hostname')
+        kwargs['enabled'] = opt_prompt('enabled', 'Enabled')
+        kwargs['transport'] = opt_prompt('transport', 'Transport type')
+        kwargs['scheduler'] = opt_prompt('scheduler', 'Scheduler type')
+        kwargs['workdir'] = opt_prompt('workdir', 'AiiDA work directory')
+        kwargs['mpirun'] = opt_prompt('mpirun', 'mpirun command')
+        kwargs['ppm'] = opt_prompt('ppm', 'Default number of CPUs per machine')
         pre = kwargs['prepend_text'] or ''
         post = kwargs['append_text'] or ''
         if (not pre) or (not post):
@@ -82,10 +95,24 @@ def update(ctx, computer, dry_run, non_interactive, **kwargs):
             kwargs['append_text'] = post
 
     '''summarize the changes'''
-
+    click.echo('Performing the following changes:')
+    for k, v in old_values.iteritems():
+        new_v = kwargs[k]
+        if new_v and not new_v == v:
+            click.echo('{}: {} -> {}'.format(k, v, new_v))
 
     if not dry_run:
-        computer.set_name(kwargs['label'])
-        computer.set_description(kwargs['description'])
-        computer.set_hostname(kwargs['hostname'])
-
+        kwargs['label'] and computer.set_name(kwargs['label'])
+        kwargs['description'] and computer.set_description(kwargs['description'])
+        kwargs['hostname'] and computer.set_hostname(kwargs['hostname'])
+        (kwargs['enabled'] is not None) and computer.set_enabled_state(kwargs['enabled'])
+        kwargs['transport'] and computer.set_transport_type(kwargs['transport'])
+        kwargs['scheduler'] and computer.set_scheduler_type(kwargs['scheduler'])
+        kwargs['workdir'] and computer.set_workdir(kwargs['workdir'])
+        kwargs['mpirun'] and computer.set_mpirun_command(kwargs['mpirun'].split('\s'))
+        kwargs['ppm'] and computer.set_default_mpiprocs_per_machine(kwargs['ppm'])
+        kwargs['prepend_text'] and computer.set_prepend_text(kwargs['prepend_text'])
+        kwargs['append_text'] and computer.set_append_text(kwargs['append_text'])
+        click.echo('Computer successfully changed')
+    else:
+        click.echo('Computer not changed (--dry-run recieved)')
