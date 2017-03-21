@@ -1,4 +1,4 @@
-#-*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 """
 verdi computer setup command
 """
@@ -45,8 +45,18 @@ def setup(dry_run=None, non_interactive=None, **kwargs):
     """
     add compute resources
     """
+    from aiida.common.exceptions import ValidationError
     from aiida_verdi.utils.aiidadb import create_computer
     load_dbenv_if_not_loaded()
+
+    pre = kwargs['prepend_text'] or ''
+    post = kwargs['append_text'] or ''
+    if (not non_interactive) and ((not pre) or (not post)):
+        '''let the user edit the pre and post execution scripts'''
+        from aiida_verdi.utils.mlinput import edit_pre_post
+        pre, post = edit_pre_post(pre, post, kwargs)
+        kwargs['prepend_text'] = pre
+        kwargs['append_text'] = post
 
     computer = create_computer(**kwargs)
     click.echo('Creating new computer with name "{}"'.format(kwargs['label']))
@@ -56,10 +66,10 @@ def setup(dry_run=None, non_interactive=None, **kwargs):
             click.echo('Computer "{}" successfully stored.'.format(kwargs['label']))
             click.echo('pk: {}, uuid: {}'.format(computer.pk, computer.uuid))
             click.echo('Note: before using it with AiiDA, configure it using the command')
-            click.echo('  verdi computer configure {}'.format(computer_name))
-            click.echo('(Note: machine_dependent transport parameters cannot be set via ')
+            click.echo('  verdi computer configure {}'.format(computer.name))
+            click.echo('(Note: machine dependent transport parameters cannot be set via ')
             click.echo('the command-line interface at the moment)')
-        except ValidateionError as e:
+        except ValidationError as e:
             msg = 'Unable to store computer: {}. Exiting...'.format(e.message)
             sys.exit(msg)
     else:

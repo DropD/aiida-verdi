@@ -18,13 +18,13 @@ def get_computer(name):
 
 
 @aiida_dbenv
-def get_computer_names(name):
+def get_computer_names():
     """
     Retrieve the list of computers in the DB.
 
     ToDo: use an API or cache the results, sometime it is quite slow!
     """
-    from aiida.orm import QueryBuilder
+    from aiida.orm.querybuilder import QueryBuilder
     qb = QueryBuilder()
     qb.append(type='computer', project=['name'])
     if qb.count() > 0:

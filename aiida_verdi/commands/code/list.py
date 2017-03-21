@@ -8,12 +8,13 @@ from aiida_verdi import options
 from aiida_verdi.param_types.computer import ComputerParam
 from aiida_verdi.param_types.plugin import PluginParam
 
+
 @click.command('list')
 @options.computer(type=ComputerParam(convert=False), help='filter codes for a computer')
 @options.input_plugin(type=PluginParam(category='calculations', available=False))
 @click.option('-A', '--all-users', is_flag=True, help='show codes of all users')
 @click.option('-o', '--show-owner', is_flag=True, help='show owner information')
-@click.option('-a', '--all-codes', is_flag=True, help='show hidden codes')
+@click.option('all_codes', '-a', '--all', is_flag=True, help='show also hidden codes')
 def list_(computer, input_plugin, all_users, show_owner, all_codes):
     """
     List available codes

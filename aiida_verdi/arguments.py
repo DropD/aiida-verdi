@@ -4,6 +4,7 @@ standard arguments for consistency throughout the verdi commandline
 """
 import click
 from aiida_verdi.param_types.code import CodeParam, CodeNameParam
+from aiida_verdi.param_types.computer import ComputerParam
 
 
 class overridable_argument(object):
@@ -29,3 +30,4 @@ class overridable_argument(object):
 
 code = overridable_argument('code', metavar='CODE', type=CodeParam())
 codelabel = overridable_argument('name', type=CodeNameParam())
+computer = overridable_argument('computer', type=ComputerParam())

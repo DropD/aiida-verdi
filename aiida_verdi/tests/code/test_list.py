@@ -20,4 +20,4 @@ def test_code_list_help():
     assert '--input-plugin' in result.output
     assert '--all-users' in result.output
     assert '--show-owner' in result.output
-    assert '--all-codes' in result.output
+    assert '--all' in result.output
