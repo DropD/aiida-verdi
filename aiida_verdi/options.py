@@ -34,6 +34,8 @@ class overridable_option(object):
 
 label = overridable_option('-L', '--label', help='short text to be used as a label')
 
+user = overridable_option('-u', '--user')
+
 description = overridable_option('-D', '--description', help='(text) description')
 
 input_plugin = overridable_option('--input-plugin', help='input plugin string',

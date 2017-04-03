@@ -52,7 +52,8 @@ class InteractiveOption(ConditionalOption):
         self._prompt = kwargs.pop('prompt', None)
         self._editor = kwargs.pop('editor', None)
         if kwargs.get('required', None):
-            kwargs['required_fn'] = noninteractive
+            required_fn = kwargs.get('required_fn', lambda ctx: True)
+            kwargs['required_fn'] = lambda ctx: noninteractive(ctx) and required_fn(ctx)
 
         '''super'''
         super(InteractiveOption, self).__init__(param_decls=param_decls, **kwargs)
