@@ -8,13 +8,15 @@ import click_plugins
 
 def find_plugins(group):
     """get a name:entrypoint dict for an entrypoint group"""
-    from pkg_resources import iter_entry_points
+    #from pkg_resources import iter_entry_points
+    from reentry.manager import iter_entry_points
     return {i.name: i for i in iter_entry_points(group)}
 
 def load_plugin(ep):
     """load an entrypoint"""
-    from pkg_resources import load_entry_point
-    return load_entry_point(ep)
+    #from pkg_resources import load_entry_point
+    #return load_entry_point(ep)
+    return ep.load()
 
 
 class PluginGroup(click.MultiCommand):
