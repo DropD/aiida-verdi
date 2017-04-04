@@ -6,6 +6,7 @@ import click
 from functools import update_wrapper
 
 from aiida_verdi import options, arguments
+from aiida_verdi.param_types.user import UserParam
 
 
 def _dj_auth_info(computer, user):
@@ -62,81 +63,46 @@ def _get_authinfo(computer, user):
         )
 
 
-def required_if_ssh(ctx):
-    comp = ctx.params.get('computer')
-    req = False
-    if comp:
-        if comp.get_transport_type() == 'ssh':
-            req = True
-    return req
-
-
-def ssh_options(f):
-    """
-    ssh transport option pack
-    """
-    from aiida_verdi.utils.interactive import InteractiveOption
-
-    @click.option('--username', prompt='Username', required_fn=required_if_ssh, cls=InteractiveOption, help='[if transport is ssh]: username to connect to COMPUTER via ssh')
-    @click.option('--port', required_fn=required_if_ssh, cls=InteractiveOption)
-    @click.option('--look_for_keys', prompt='look for keys', required_fn=required_if_ssh, cls=InteractiveOption)
-    def new_f(*args, **kwargs):
-        return f(*args, **kwargs)
-    return update_wrapper(new_f, f)
-
+def _different_user_warning():
+    warn = "*" * 72
+    warn += '\n' + "** {:66s} **".format("WARNING!")
+    warn += '\n' + "** {:66s} **".format("  You are configuring a different user.")
+    warn += '\n' + "** {:66s} **".format("  Note that the default suggestions are taken from your")
+    warn += '\n' + "** {:66s} **".format("  local configuration files, so they may be incorrect.")
+    warn += '\n' + "*" * 72
+    return warn
 
 @click.command()
 @options.user()
 @arguments.computer()
-@ssh_options
-def configure(user, computer, **kwargs):
+@options.dry_run()
+def configure(user, computer, dry_run):
     """
     Configure a computer for a given AiiDA user
-    """
-    from aiida.backends.utils import get_automatic_user
-    #~ if not ctx.obj:
-    #~     ctx.obj = {}
-
-    '''should possibly be in user parameter type'''
-    if not user:
-        user = get_automatic_user()
-    #~ ctx.obj['user'] = user
-    #~ ctx.obj['computer'] = computer
-
-    authinfo, old_authparams = _get_authinfo(computer, user)
-    #~ ctx.obj['authinfo'] = authinfo
-    #~ ctx.obj['old_authparams'] = old_authparams
-
-    click.echo(("Configuring computer '{}' for the AiiDA user '{}'".format(computer.name, user.email)))
-    click.echo("Computer {} has transport of type {}".format(computer.name, computer.get_transport_type()))
-
-
-@click.command()
-@click.pass_context
-def configure_default(ctx):
-    """
-    configure for the specific context
     """
     import inspect
     import readline
 
+    from aiida.backends.utils import get_automatic_user
     from aiida.common.utils import get_configured_user_email
     from aiida.common.exceptions import ValidationError
-    user = ctx.obj['user']
-    computer = ctx.obj['computer']
-    authinfo = ctx.obj['authinfo']
-    old_authparams = ctx.obj['old_authparams']
+
+    '''should possibly be in user parameter type'''
+    if not user:
+        user = get_automatic_user()
+    else:
+        user = user._dbuser
+
+    authinfo, old_authparams = _get_authinfo(computer, user)
+
+    click.echo(("Configuring computer '{}' for the AiiDA user '{}'".format(computer.name, user.email)))
+    click.echo("Computer {} has transport of type {}".format(computer.name, computer.get_transport_type()))
 
     '''configuring the computer'''
     Transport = computer.get_transport_class()
 
     if user.email != get_configured_user_email():
-        click.echo("*" * 72)
-        click.echo("** {:66s} **".format("WARNING!"))
-        click.echo("** {:66s} **".format("  You are configuring a different user."))
-        click.echo("** {:66s} **".format("  Note that the default suggestions are taken from your"))
-        click.echo("** {:66s} **".format("  local configuration files, so they may be incorrect."))
-        click.echo("*" * 72)
+        click.echo(_different_user_warning())
 
     valid_keys = Transport.get_valid_auth_params()
 
@@ -152,8 +118,8 @@ def configure_default(ctx):
     if not valid_keys:
         click.echo("There are no special keys to be configured. Configuration completed.")
         authinfo.set_auth_params({})
-        authinfo.save()
-        return
+        if not dry_run:
+            authinfo.save()
 
     click.echo("")
     click.echo("Note: to leave a field unconfigured, leave it empty and press [Enter]")
@@ -172,7 +138,7 @@ def configure_default(ctx):
                         Transport))[converter_name]
                 except KeyError:
                     click.echo("Internal error! No {} defined in Transport {}".format(converter_name, computer.get_transport_type()), err=True)
-                    click.exit(1)
+                    raise click.Abort(1)
 
                 if k in default_authparams:
                     readline.set_startup_hook(lambda:
@@ -195,8 +161,11 @@ def configure_default(ctx):
                 key_set = True
             except ValidationError as e:
                 click.echo("Error in the inserted value: {}".format(e.message))
-                click.exit("1")
+                raise click.Abort("1")
 
     authinfo.set_auth_params(new_authparams)
-    authinfo.save()
-    click.echo("Configuration stored for your user on computer '{}'.".format(computer.name))
+    if not dry_run:
+        authinfo.save()
+        click.echo("\nConfiguration stored for your user on computer '{}'.\n".format(computer.name))
+    else:
+        click.echo('\nConfiguration not saved (--dry-run recieved)\n')

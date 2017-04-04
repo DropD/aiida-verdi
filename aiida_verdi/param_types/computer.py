@@ -1,4 +1,4 @@
-#-*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 """
 :py:mod:`click` parameter type for AiiDA computer nodes
 """
@@ -23,6 +23,7 @@ class ComputerParam(click.ParamType):
     def __init__(self, convert=True, **kwargs):
         self.get_from_db = convert
 
+    @aiida_dbenv
     def convert(self, value, param, ctx):
         """
         tries to get a computer from the db (if convert=True).
