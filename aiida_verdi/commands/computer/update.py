@@ -40,7 +40,7 @@ def confirmation_warning(computer, maxlen=75):
 @options.label(cls=InteractiveOption, callback=comp_not_exists, help='The name for this Computer')
 @options.description(cls=InteractiveOption)
 @click.option('--hostname', cls=InteractiveOption, help='The fully qualified host name of this computer')
-@click.option('--enabled/--disabled', default=True, help=('if disabled, calculations associated with this computer' 'will not be submitted'))
+@click.option('--enabled/--disabled', default=True, cls=InteractiveOption, help=('if disabled, calculations associated with this computer' 'will not be submitted'))
 @click.option('--transport', cls=InteractiveOption, type=PluginParam(category='transports'), help='Transport to be used')
 @click.option('--scheduler', cls=InteractiveOption, type=PluginParam(category='schedulers'), help='Scheduler to be used')
 @click.option('--workdir', cls=InteractiveOption, type=click.Path(), help='Absolute path on the computer. AiiDA will run all calculations under that directory (typically on the scratch file system). {username} will be replaced by your username on the remote computer')
