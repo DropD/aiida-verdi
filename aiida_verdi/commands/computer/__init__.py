@@ -9,6 +9,7 @@ from aiida_verdi.commands.computer.show import show
 from aiida_verdi.commands.computer.update import update
 from aiida_verdi.commands.computer.rename import rename
 from aiida_verdi.commands.computer.configure import configure
+from aiida_verdi.commands.computer.delete import delete
 
 
 computer.add_command(setup, 'setup')
@@ -17,5 +18,6 @@ computer.add_command(show, 'show')
 computer.add_command(update, 'update')
 computer.add_command(rename, 'rename')
 computer.add_command(configure, 'configure')
+computer.add_command(delete, 'delete')
 
 __all__ = [computer]

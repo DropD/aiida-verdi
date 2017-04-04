@@ -5,6 +5,7 @@ utilities for accessing aiida entities from commandline commands
 
 
 from aiida_verdi.verdic_utils import aiida_dbenv
+from aiida_verdi.verdic_utils import load_dbenv_if_not_loaded as ensure_aiida_dbenv
 
 
 @aiida_dbenv
