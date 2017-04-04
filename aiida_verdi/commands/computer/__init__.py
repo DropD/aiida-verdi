@@ -11,6 +11,7 @@ from aiida_verdi.commands.computer.rename import rename
 from aiida_verdi.commands.computer.configure import configure
 from aiida_verdi.commands.computer.delete import delete
 from aiida_verdi.commands.computer.test import test
+from aiida_verdi.commands.computer.enable import enable
 
 
 computer.add_command(setup, 'setup')
@@ -21,5 +22,6 @@ computer.add_command(rename, 'rename')
 computer.add_command(configure, 'configure')
 computer.add_command(delete, 'delete')
 computer.add_command(test, 'test')
+computer.add_command(enable, 'enable')
 
 __all__ = [computer]
