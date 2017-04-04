@@ -78,7 +78,7 @@ def comp_not_exists(ctx, param, value):
         get_computer(name=value)
         msg = '{} exists. '.format(value)
         msg += 'Use verdi computer update to modify existing computers'
-        sys.exit(msg)
+        raise click.ClickException(msg)
     except NotExistent:
         return value
     except TypeError:

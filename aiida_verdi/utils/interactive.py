@@ -245,8 +245,8 @@ class InteractiveOption(ConditionalOption):
                 if default is not None:
                     return self.type.convert(default, param, ctx)
                 else:
-                    '''... or reraise'''
-                    raise e
+                    '''... or raise Missing Parameter'''
+                    raise click.MissingParameter()
             '''prompting allowed'''
             value = self.prompt_loop(ctx, param, value)
         return value

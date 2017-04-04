@@ -137,8 +137,7 @@ def configure(user, computer, dry_run):
                     converter = dict(inspect.getmembers(
                         Transport))[converter_name]
                 except KeyError:
-                    click.echo("Internal error! No {} defined in Transport {}".format(converter_name, computer.get_transport_type()), err=True)
-                    raise click.Abort(1)
+                    raise click.ClickException("Internal error! No {} defined in Transport {}".format(converter_name, computer.get_transport_type()), err=True)
 
                 if k in default_authparams:
                     readline.set_startup_hook(lambda:
@@ -160,8 +159,7 @@ def configure(user, computer, dry_run):
                     new_authparams[k] = converter(txtval)
                 key_set = True
             except ValidationError as e:
-                click.echo("Error in the inserted value: {}".format(e.message))
-                raise click.Abort("1")
+                raise click.ClickException("Error in the inserted value: {}".format(e.message))
 
     authinfo.set_auth_params(new_authparams)
     if not dry_run:
