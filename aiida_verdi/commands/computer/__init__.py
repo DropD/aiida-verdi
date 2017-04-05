@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-collecting computer subcommands
+assemble computer subcommands
 """
 from aiida_verdi.commands.computer.computer import computer
 from aiida_verdi.commands.computer.setup import setup

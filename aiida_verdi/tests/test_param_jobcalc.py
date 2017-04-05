@@ -63,6 +63,8 @@ def get_valid_compl_item():
     calclist = [i for i in JobCalcParam().complete() if isinstance(load_node(int(i[0])), JobCalculation)]
     if calclist:
         return calclist[0]
+    else:
+        return None
 
 
 def get_invalid_pk():
