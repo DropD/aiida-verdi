@@ -51,7 +51,7 @@ def get_valid_compl_item():
 
 def test_gotocomp_valid_dry():
     """
-    action: verdi calculation gotocomputer <valid computer> --dry-run
+    action: verdi calculation gotocomputer <valid calculation> --dry-run
     behaviour: print command and dry-run message
     """
     citem = get_valid_compl_item()
@@ -63,7 +63,7 @@ def test_gotocomp_valid_dry():
 
 def test_gotocomp_invalid_dry():
     """
-    action: verdi calculation gotocomputer <invalid computer> --dry-run
+    action: verdi calculation gotocomputer <invalid calculation> --dry-run
     behaviour: print invalid arg msg and exit
     """
     invalid = get_invalid_pk()
