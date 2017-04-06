@@ -18,16 +18,22 @@ class PluginParam(click.ParamType):
         self.category = category
         self.must_available = available
         super(PluginParam, self).__init__(*args, **kwargs)
-        if self.category == 'calculations':
-            self.get_all_plugins = self.old_get_calculations
-        elif self.category == 'parsers':
-            self.get_all_plugins = self.old_get_parsers
-        elif self.category == 'transports':
-            self.get_all_plugins = self.old_get_transports
-        elif self.category == 'schedulers':
-            self.get_all_plugins = self.old_get_schedulers
-        else:
-            raise ValueError('unsupported plugin category for cmdline args')
+        try:
+            '''if aiida has new plugin system'''
+            from aiida.common import ep_pluginloader
+            self.get_all_plugins = self.new_get_plugins(category)
+        except ImportError:
+            '''old plugin system'''
+            if self.category == 'calculations':
+                self.get_all_plugins = self.old_get_calculations
+            elif self.category == 'parsers':
+                self.get_all_plugins = self.old_get_parsers
+            elif self.category == 'transports':
+                self.get_all_plugins = self.old_get_transports
+            elif self.category == 'schedulers':
+                self.get_all_plugins = self.old_get_schedulers
+            else:
+                raise ValueError('unsupported plugin category for cmdline args')
 
     def get_possibilities(self, incomplete=''):
         """return a list of plugins starting with incomplete"""
@@ -61,6 +67,14 @@ class PluginParam(click.ParamType):
         from aiida.common.pluginloader import existing_plugins
         from aiida.scheduler import Scheduler
         return existing_plugins(Scheduler, 'aiida.scheduler.plugins')
+
+    def new_get_plugins(self, category):
+        """use entry points"""
+        @aiida_dbenv
+        def get_plugins():
+            from aiida.common.ep_pluginloader import all_plugins
+            return all_plugins(category)
+        return get_plugins
 
     def complete(self, ctx, incomplete):
         """return possible completions"""

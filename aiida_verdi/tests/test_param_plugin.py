@@ -1,4 +1,4 @@
-#-*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 """
 unittests for :py:class:`aiida_verdi.param_types.plugin.PluginParam`
 """
