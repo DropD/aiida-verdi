@@ -27,6 +27,7 @@ def inputcat(calc, path):
 
     try:
         cat_repo_files(calc, os.path.join('raw_input', path))
+        click.echo()
     except ValueError as e:
         raise click.ClickException(e.message)
     except IOError as e:

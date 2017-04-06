@@ -6,7 +6,7 @@ from aiida_verdi import arguments, options
 
 @click.command()
 @arguments.calculation()
-@options.path(default='', help="The relative path of the file you want to show. If not specified, show content of all the 'raw_input' directory")
+@options.path(default='', help="The relative path of the file you want to show. If not specified, show content of all the 'path' directory")
 @options.color(help="Color folders with a different color")
 def outputls(calc, path, color):
     """
