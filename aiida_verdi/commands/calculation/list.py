@@ -5,6 +5,7 @@ verdi calculation list
 import click
 
 from aiida.common.datastructures import calc_states
+from aiida_verdi import options
 
 
 _default_calcstates = (calc_states.WITHSCHEDULER,
@@ -24,7 +25,7 @@ _default_projectors = ('pk', 'state', 'ctime', 'sched', 'computer', 'type')
 
 @click.command('list')
 @click.option('-s', '--states', multiple=True, type=click.Choice(calc_states), default=_default_calcstates, help="[can be given multiple times] Show only the AiiDA calculations with given state(s)")
-@click.option('-p', '--past-days', metavar='N', type=int, help="add a filter to show only calculations created in the past N days")
+@options.past_days(help="add a filter to show only calculations created in the past N days")
 @click.option('-g', '--group', '--group-name', 'group', metavar='GROUPNAME', help="add a filter to show only calculations within a given group")
 @click.option('-G', '--group-pk', metavar='GROUPPK', type=int, help="add a filter to show only calculations within a given group")
 @click.option('-a', '--all-states', is_flag=True, help="Overwrite manual set of states if present, and look for calculations in every possible state")

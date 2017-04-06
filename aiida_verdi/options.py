@@ -8,6 +8,7 @@ from aiida.backends.profile import (BACKEND_DJANGO, BACKEND_SQLA)
 from aiida_verdi.param_types.plugin import PluginParam
 from aiida_verdi.param_types.computer import ComputerParam
 from aiida_verdi.param_types.user import UserParam
+from aiida_verdi.param_types.jobcalc import JobCalcParam
 from aiida_verdi.verdic_utils import prompt_with_help, multi_line_prompt
 
 
@@ -42,11 +43,17 @@ description = overridable_option('-D', '--description', help='(text) description
 input_plugin = overridable_option('--input-plugin', help='input plugin string',
                                   type=PluginParam(category='calculations'))
 
+force = overridable_option('-f', '--force', is_flag=True, help='Do not ask for confirmation')
+
+past_days = overridable_option('-p', '--past-days', metavar='N', type=int, help="filter for only the past N days")
+
+calculation = overridable_option('-c', '--calc', type=JobCalcParam(), help='PK or UUID of a calculation')
+
 path = overridable_option('-p', '--path', type=click.Path(readable=False))
 
 color = overridable_option('-c', '--color', is_flag=True)
 
-computer = overridable_option('-c', '--computer', type=ComputerParam(),
+computer = overridable_option('-C', '--computer', type=ComputerParam(),
                               help=('The name of the computer as stored in '
                                     'the AiiDA database'))
 

@@ -14,6 +14,7 @@ from aiida_verdi.commands.calculation.inputls import inputls
 from aiida_verdi.commands.calculation.outputcat import outputcat
 from aiida_verdi.commands.calculation.outputls import outputls
 from aiida_verdi.commands.calculation.kill import kill
+from aiida_verdi.commands.calculation.cleanworkdir import cleanworkdir
 
 
 calculation.add_command(gotocomputer)
@@ -27,6 +28,7 @@ calculation.add_command(inputls)
 calculation.add_command(outputcat)
 calculation.add_command(outputls)
 calculation.add_command(kill)
+calculation.add_command(cleanworkdir)
 
 
 __all__ = [calculation]

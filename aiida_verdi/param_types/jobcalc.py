@@ -15,11 +15,13 @@ class JobCalcParam(click.ParamType):
 
     if convert=True, passes a JobCalculation,
     if convert=False, passes the uuid of the calculation
+    if convert=False, pass_pk=True, passes the pk of the calculation
     """
     name = 'aiida calculation item'
 
-    def __init__(self, convert=True, **kwargs):
+    def __init__(self, convert=True, pass_pk=False, **kwargs):
         self.get_from_db = convert
+        self.pass_pk = pass_pk
 
     @aiida_dbenv
     def convert(self, value, param, ctx):
@@ -65,7 +67,10 @@ class JobCalcParam(click.ParamType):
         if self.get_from_db:
             value = calc
         else:
-            value = calc.uuid
+            if self.pass_pk:
+                value = calc.pk
+            else:
+                value = calc.uuid
         return value
 
     @aiida_dbenv

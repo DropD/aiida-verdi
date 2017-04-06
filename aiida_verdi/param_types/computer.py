@@ -17,11 +17,13 @@ class ComputerParam(click.ParamType):
     Handles completion and conversion
 
     :param convert: should the argument be converted into a Computer node? default=True
+    :param pass_pk: if convert is True: convert to pk
     """
     name = 'aiida computer'
 
-    def __init__(self, convert=True, **kwargs):
+    def __init__(self, convert=True, pass_pk=False, **kwargs):
         self.get_from_db = convert
+        self.pass_pk = pass_pk
 
     @aiida_dbenv
     def convert(self, value, param, ctx):
@@ -42,6 +44,9 @@ class ComputerParam(click.ParamType):
             from aiida.orm.computer import Computer
             '''get computer from db'''
             value = Computer.get(value)
+        elif self.pass_pk:
+            from aiida.orm.computer import Computer
+            value = Computer.get(value).pk
         return value
 
     @aiida_dbenv

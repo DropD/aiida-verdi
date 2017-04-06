@@ -9,7 +9,7 @@ from aiida_verdi import arguments, options
 
 @click.command()
 @arguments.calculation(nargs=-1)
-@click.option('-f', '--force', is_flag=True, help='Force the kill of calculations')
+@options.force(help='Force the kill of calculations')
 @options.non_interactive()
 @options.dry_run()
 def kill(calc, force, non_interactive, dry_run):
