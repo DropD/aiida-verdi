@@ -42,6 +42,10 @@ description = overridable_option('-D', '--description', help='(text) description
 input_plugin = overridable_option('--input-plugin', help='input plugin string',
                                   type=PluginParam(category='calculations'))
 
+path = overridable_option('-p', '--path', type=click.Path(readable=False))
+
+color = overridable_option('-c', '--color', is_flag=True)
+
 computer = overridable_option('-c', '--computer', type=ComputerParam(),
                               help=('The name of the computer as stored in '
                                     'the AiiDA database'))

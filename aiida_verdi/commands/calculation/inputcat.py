@@ -3,12 +3,12 @@
 verdi calculation inputcat
 """
 import click
-from aiida_verdi import arguments
+from aiida_verdi import arguments, options
 
 
 @click.command()
 @arguments.calculation()
-@click.option('-p', '--path', help="The relative path of the file you want to show. Take the default input file if it is not specified")
+@options.path(help="The relative path of the file you want to show. Take the default input file if it is not specified")
 def inputcat(calc, path):
     """
     Write the contents of an input file for CALCULATION from the repository to stdout
