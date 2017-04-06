@@ -9,6 +9,7 @@ from aiida_verdi.commands.calculation.res import res
 from aiida_verdi.commands.calculation.show import show
 from aiida_verdi.commands.calculation.logshow import logshow
 from aiida_verdi.commands.calculation.plugins import plugins
+from aiida_verdi.commands.calculation.inputcat import inputcat
 
 
 calculation.add_command(gotocomputer)
@@ -17,6 +18,7 @@ calculation.add_command(res)
 calculation.add_command(show)
 calculation.add_command(logshow)
 calculation.add_command(plugins)
+calculation.add_command(inputcat)
 
 
 __all__ = [calculation]
