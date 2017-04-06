@@ -11,6 +11,7 @@ from aiida_verdi.commands.calculation.logshow import logshow
 from aiida_verdi.commands.calculation.plugins import plugins
 from aiida_verdi.commands.calculation.inputcat import inputcat
 from aiida_verdi.commands.calculation.inputls import inputls
+from aiida_verdi.commands.calculation.outputls import outputls
 
 
 calculation.add_command(gotocomputer)
@@ -21,6 +22,7 @@ calculation.add_command(logshow)
 calculation.add_command(plugins)
 calculation.add_command(inputcat)
 calculation.add_command(inputls)
+calculation.add_command(outputls)
 
 
 __all__ = [calculation]
