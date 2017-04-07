@@ -7,13 +7,20 @@ from click_completion import startswith
 from click_spinner import spinner as cli_spinner
 
 from aiida_verdi.verdic_utils import aiida_dbenv
+from aiida_verdi.param_types.node import NodeParam
 
 
-class CodeParam(click.ParamType):
+class CodeParam(NodeParam):
     """
     handle verification and tab-completion (relies on click-completion) for Code db entries
     """
     name = 'aiida code'
+
+    @property
+    @aiida_dbenv
+    def node_type(self):
+        from aiida.orm import Code
+        return Code
 
     def get_possibilities(self, incomplete=''):
         """
@@ -56,7 +63,13 @@ class CodeParam(click.ParamType):
         if value not in codes:
             raise click.BadParameter('Must be a code in you database', param=param)
 
-        return get_code(value)
+        if self.get_from_db:
+            value = get_code(value)
+        elif self.pass_pk:
+            value = get_code(value).pk
+        else:
+            value = get_code(value).uuid
+        return value
 
 
 class CodeNameParam(click.ParamType):

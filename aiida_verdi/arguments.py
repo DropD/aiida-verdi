@@ -7,6 +7,7 @@ from aiida_verdi.param_types.code import CodeParam, CodeNameParam
 from aiida_verdi.param_types.computer import ComputerParam
 from aiida_verdi.param_types.jobcalc import JobCalcParam
 from aiida_verdi.param_types.plugin import PluginParam
+from aiida_verdi.param_types.node import NodeParam
 
 
 class overridable_argument(object):
@@ -31,6 +32,7 @@ class overridable_argument(object):
         return click.argument(*self.args, **kw_copy)
 
 
+node = overridable_argument('node', metavar='NODE', type=NodeParam())
 code = overridable_argument('code', metavar='CODE', type=CodeParam())
 codelabel = overridable_argument('name', type=CodeNameParam())
 computer = overridable_argument('computer', type=ComputerParam())

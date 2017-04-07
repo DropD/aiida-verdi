@@ -18,3 +18,18 @@ def edit_pre_post(pre='', post='', summary={}):
     else:
         pre, post = ('', '')
     return pre, post
+
+
+def edit_new_comment():
+    from aiida_verdi.utils.tpl import env
+    t = env.get_template('new_cmt.txt.tpl')
+    content = t.render()
+    mlinput = click.edit(content, extension='.txt')
+    if mlinput:
+        import re
+        regex = r'^(?!#=)(.*)$'
+        cmt = '\n'.join(re.findall(regex, mlinput, flags=re.M))
+        cmt = cmt.strip('\n')
+    else:
+        cmt = ''
+    return cmt
