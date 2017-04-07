@@ -50,7 +50,7 @@ def test_add_invalidarg():
     action: comment add <invalid node> --dry-run --non-interactive
     behaviour: exit with invalid arg msg
     """
-    result = action(str(get_invalid_pk), '--dry-run', '--non-interactive')
+    result = action(str(get_invalid_pk()), '--dry-run', '--non-interactive')
     assert result.exception
     assert 'Invalid value for "node"' in result.output
 
