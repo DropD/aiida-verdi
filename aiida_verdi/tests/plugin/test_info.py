@@ -2,11 +2,14 @@
 """
 test verdi plugin info
 """
-import click
 from click.testing import CliRunner
 
 
 def test_info_help():
+    """
+    action: verdi plugins info --help
+    behaviour: exit with help msg
+    """
     from aiida_verdi.commands.plugin import plugin
     runner = CliRunner()
     result = runner.invoke(plugin, ['info', '--help'])
@@ -16,6 +19,10 @@ def test_info_help():
 
 
 def test_info_noarg():
+    """
+    action: verdi plugins info
+    behaviour: exit with missing arg msg
+    """
     from aiida_verdi.commands.plugin import plugin
     runner = CliRunner()
     result = runner.invoke(plugin, ['info'])
@@ -24,8 +31,14 @@ def test_info_noarg():
 
 
 def test_info_mul():
+    """
+    action: verdi plugins info mul
+    behaviour: (if connection) print details of plugin mul
+    """
     from aiida_verdi.commands.plugin import plugin
+    import requests as rq
     runner = CliRunner()
     result = runner.invoke(plugin, ['info', 'mul'])
-    assert not result.exception
-    assert 'aiida-mul' in result.output
+    if not isinstance(result.exception, rq.ConnectionError):
+        assert not result.exception
+        assert 'aiida-mul' in result.output

@@ -71,7 +71,11 @@ def get_invalid_pk():
     from aiida.orm import load_node
     from aiida.orm import Node
     pklist = [int(i[0]) for i in NodeParam().complete() if isinstance(load_node(int(i[0])), Node)]
-    invalid = int(pklist[-1]) + 1
+    if pklist:
+        invalid = int(pklist[-1]) + 1
+    else:
+        '''guess 100 to guard against computers'''
+        invalid = 100
     while invalid in pklist:
         invalid += 1
     return invalid
