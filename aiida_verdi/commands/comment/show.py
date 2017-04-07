@@ -5,12 +5,11 @@ verdi command show
 import click
 
 from aiida_verdi import arguments, options
-from aiida_verdi.param_types.user import UserParam
 
 
 @click.command()
 @arguments.node()
-@click.argument('comment-id', type=int, required=False)
+@arguments.comment_id(required=False)
 @options.user()
 @options.dry_run()
 @options.non_interactive()
@@ -30,10 +29,11 @@ def show(node, comment_id, user, dry_run, non_interactive):
         to_print = [i for i in all_comments if i['user__email'] == user.email]
         if not to_print:
             click.echo("Nothing found for user '{}'.".format(user))
-            click.echo("Valid users found for Node {} are: {}.".format(node.pk,
-                                                                    ", ".join(set(
-                                                                        ["'" + i['user__email'] + "'" for i in
-                                                                        all_comments]))))
+            click.echo(
+                "Valid users found for Node {} are: {}.".format(node.pk,
+                                                                ", ".join(set(
+                                                                    ["'" + i['user__email'] + "'" for i in
+                                                                     all_comments]))))
     else:
         to_print = all_comments
 
@@ -43,9 +43,9 @@ def show(node, comment_id, user, dry_run, non_interactive):
     for i in to_print:
         click.echo("*"*58)
         click.echo("Comment of '{}' on {}".format(i['user__email'],
-                                                i['ctime'].strftime("%Y-%m-%d %H:%M")))
+                                                  i['ctime'].strftime("%Y-%m-%d %H:%M")))
         click.echo("ID: {}. Last modified on {}".format(i['pk'],
-                                                    i['mtime'].strftime("%Y-%m-%d %H:%M")))
+                                                        i['mtime'].strftime("%Y-%m-%d %H:%M")))
         click.echo("")
         click.echo("{}".format(i['content']))
         click.echo("")

@@ -2,13 +2,12 @@
 """
 tests for comment remove
 """
-import click
-
 from aiida_verdi.tests.utils.action import general_action
 from aiida_verdi.tests.test_param_node import get_valid_compl_item, get_invalid_pk
 
 
 def action(*args, **kwargs):
+    """call comment remove with args & opts"""
     from aiida_verdi.commands.comment import comment
     return general_action(comment, 'remove', *args, **kwargs)
 

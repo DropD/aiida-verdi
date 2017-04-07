@@ -6,6 +6,10 @@ import click
 
 
 def edit_pre_post(pre='', post='', summary={}):
+    """
+    use click to call up an editor to write or edit pre / post
+    execution scripts for both codes and computers
+    """
     from aiida_verdi.utils.tpl import env
     t = env.get_template('prepost.bash.tpl')
     summary = {k: v for k, v in summary.iteritems() if v}
@@ -20,10 +24,13 @@ def edit_pre_post(pre='', post='', summary={}):
     return pre, post
 
 
-def edit_new_comment():
+def edit_comment(old_cmt=''):
+    """
+    call up an editor to edit comments to nodes in the database
+    """
     from aiida_verdi.utils.tpl import env
     t = env.get_template('new_cmt.txt.tpl')
-    content = t.render()
+    content = t.render(old_comment=old_cmt)
     mlinput = click.edit(content, extension='.txt')
     if mlinput:
         import re

@@ -9,7 +9,7 @@ from aiida_verdi import arguments, options
 
 @click.command()
 @arguments.node()
-@click.argument('comment-id', type=int, nargs=-1)
+@arguments.comment_id(nargs=-1)
 @click.option('-a', '-all', 'all_cmt', is_flag=True, help='If used, deletes all the comments of the active user attached to the node')
 @click.option('-f', '--force', is_flag=True, help='Delete without confirmation')
 @options.dry_run()
