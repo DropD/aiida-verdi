@@ -56,11 +56,11 @@ def test_remove_invalidarg():
 
 def test_remove_validarg_withcmt_force():
     """
-    action: comment remove <valid node> --comment comment --dry-run --force
+    action: comment remove <valid node> <comment> --dry-run --force
     behaviour: exit with dry-run msg
     """
     item = get_valid_compl_item()
     if item:
-        result = action(item[0], '--dry-run', comment=1)
+        result = action(item[0], '1', '--dry-run', '--force')
         assert not result.exception
         assert '--dry-run recieved' in result.output

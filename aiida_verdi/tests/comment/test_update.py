@@ -41,7 +41,7 @@ def test_update_validnode():
     if item:
         result = action(item[0], '--dry-run', '--non-interactive')
         assert result.exception
-        assert 'Missing argument "comment_id"' in result.output
+        assert 'Missing argument "comment-id"' in result.output
 
 
 def test_update_invalidarg():
@@ -61,7 +61,7 @@ def test_update_validarg_withcmt():
     """
     item = get_valid_compl_item()
     if item:
-        result = action(item[0], 1, '--dry-run', '--non-interactive')
+        result = action(item[0], '1', '--dry-run', '--non-interactive')
         if result.exception:
             assert 'has no comment 1' in result.output
         else:
@@ -75,6 +75,6 @@ def test_update_validarg_withcmt_content():
     """
     item = get_valid_compl_item()
     if item:
-        result = action(item[0], 1, '--dry-run', '--non-interactive', comment='comment')
+        result = action(item[0], '1', '--dry-run', '--non-interactive', comment='comment')
         assert not result.exception
         assert '--dry-run recieved' in result.output

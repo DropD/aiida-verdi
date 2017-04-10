@@ -31,4 +31,4 @@ def update(node, comment_id, comment, dry_run, non_interactive):
     if not dry_run:
         node._update_comment(the_comment, comment_id, user)
     else:
-        "Comment not changed (--dry-run recieved)"
+        click.echo("Comment not changed (--dry-run recieved)")
