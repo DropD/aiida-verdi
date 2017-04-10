@@ -78,3 +78,57 @@ def get_daemon_pid():
             return None
     else:
         return None
+
+
+def _clean_sock_files():
+    """
+    Tries to remove the supervisord.pid and .sock files from the .aiida/daemon
+    subfolder. This is typically needed when the computer is restarted with
+    the daemon still on.
+    """
+    import errno
+    import os
+
+    try:
+        os.remove(get_sock_full_path())
+    except OSError as e:
+        # Ignore if errno = errno.ENOENT (2): no file found
+        if e.errno != errno.ENOENT:  # No such file
+            raise
+
+    try:
+        os.remove(get_pid_full_path())
+    except OSError as e:
+        # Ignore if errno = errno.ENOENT (2): no file found
+        if e.errno != errno.ENOENT:  # No such file
+            raise
+
+
+def kill_daemon():
+    """
+    This is the actual call that kills the daemon.
+
+    There are some print statements inside, but no sys.exit, so it is
+    safe to be called from other parts of the code.
+    """
+    import click
+    from signal import SIGTERM
+    import errno
+    import os
+
+    pid = get_daemon_pid()
+    if pid is None:
+        click.echo("Daemon not running (cannot find the PID for it)")
+        return
+
+    click.echo("Shutting down AiiDA Daemon ({})...".format(pid))
+    try:
+        os.kill(pid, SIGTERM)
+    except OSError as e:
+        if e.errno == errno.ESRCH:  # No such process
+            click.echo("The process {} was not found! Assuming it was already stopped.".format(pid))
+            click.echo("Cleaning the .pid and .sock files...")
+            _clean_sock_files()
+        else:
+            raise
+

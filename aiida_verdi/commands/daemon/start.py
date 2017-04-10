@@ -6,21 +6,20 @@ import click
 
 
 @click.command()
-def start()
+def start():
     """
     Start the daemon
     """
-    if not is_dbenv_loaded():
-        from aiida.backends.utils import load_dbenv
-        load_dbenv(process='daemon')
-
+    from datetime import timedelta
+    try:
+        import subprocess32 as subprocess
+    except ImportError:
+        import subprocess
+    from aiida_verdi.utils.aiidadb import ensure_aiida_dbenv
+    ensure_aiida_dbenv(process='daemon')
+    from aiida.common import aiidalogger
+    logger = aiidalogger.getChild('workflowmanager')
     from aiida.daemon.timestamps import get_last_daemon_timestamp,set_daemon_timestamp
-
-    if args:
-        print >> sys.stderr, (
-            "No arguments allowed for the '{}' command.".format(
-                self.get_full_command_name()))
-        sys.exit(1)
 
     from aiida.backends.utils import get_daemon_user
     from aiida.common.utils import get_configured_user_email
@@ -29,32 +28,33 @@ def start()
     this_user = get_configured_user_email()
 
 
-    if daemon_user != this_user:
-        print "You are not the daemon user! I will not start the daemon."
-        print "(The daemon user is '{}', you are '{}')".format(
-            daemon_user, this_user)
-        print ""
-        print "** FOR ADVANCED USERS ONLY: **"
-        print "To change the current default user, use 'verdi install --only-config'"
-        print "To change the daemon user, use 'verdi daemon configureuser'"
+    from aiida_verdi.utils.daemon import is_daemon_user
+    if not is_daemon_user():
+        click.echo("You are not the daemon user! I will not start the daemon.")
+        click.echo("(The daemon user is '{}', you are '{}')".format(daemon_user, this_user))
+        click.echo("")
+        click.echo("** FOR ADVANCED USERS ONLY: **")
+        click.echo("To change the current default user, use 'verdi install --only-config'")
+        click.echo("To change the daemon user, use 'verdi daemon configureuser'")
+        return 1
 
-        sys.exit(1)
-
-    pid = self.get_daemon_pid()
+    from aiida_verdi.utils.daemon import get_daemon_pid
+    pid = get_daemon_pid()
 
     if pid is not None:
-        print "Daemon already running, try asking for its status"
-        return
+        click.echo("Daemon already running, try asking for its status")
+        return 0
 
-    print "Clearing all locks ..."
+    click.echo("Clearing all locks ...")
     from aiida.orm.lock import LockManager
 
     LockManager().clear_all()
 
-    print "Starting AiiDA Daemon ..."
-    currenv = _get_env_with_venv_bin()
+    click.echo("Starting AiiDA Daemon ...")
+    from aiida_verdi.utils.daemon import get_env_with_venv_bin, get_conffile_full_path
+    currenv = get_env_with_venv_bin()
     process = subprocess.Popen(
-        "supervisord -c {}".format(self.conffile_full_path),
+        "supervisord -c {}".format(get_conffile_full_path()),
         shell=True, stdout=subprocess.PIPE, env=currenv)
     process.wait()
 
@@ -69,41 +69,13 @@ def start()
             logger.info("Workflow stop timestamp was {}; re-initializing "
                         "it to current time".format(
                         get_last_daemon_timestamp('workflow',when='stop')))
-            print "Re-initializing workflow stepper stop timestamp"
+            click.echo("Re-initializing workflow stepper stop timestamp")
             set_daemon_timestamp(task_name='workflow', when='stop')
     except TypeError:
         # when some timestamps are None (i.e. not present), we make
         # sure that at least the stop timestamp is defined
-        print "Re-initializing workflow stepper stop timestamp"
+        click.echo("Re-initializing workflow stepper stop timestamp")
         set_daemon_timestamp(task_name='workflow', when='stop')
 
     if (process.returncode == 0):
-        print "Daemon started"
-
-
-def kill_daemon(self):
-    """
-    This is the actual call that kills the daemon.
-
-    There are some print statements inside, but no sys.exit, so it is
-    safe to be called from other parts of the code.
-    """
-    from signal import SIGTERM
-    import errno
-
-    pid = self.get_daemon_pid()
-    if pid is None:
-        print "Daemon not running (cannot find the PID for it)"
-        return
-
-    print "Shutting down AiiDA Daemon ({})...".format(pid)
-    try:
-        os.kill(pid, SIGTERM)
-    except OSError as e:
-        if e.errno == errno.ESRCH:  # No such process
-            print ("The process {} was not found! "
-                    "Assuming it was already stopped.".format(pid))
-            print "Cleaning the .pid and .sock files..."
-            self._clean_sock_files()
-        else:
-            raise
+        click.echo("Daemon started")
