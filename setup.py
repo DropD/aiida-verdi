@@ -9,8 +9,8 @@ __license__ = "MIT license, see LICENSE.txt file."
 
 if __name__ == '__main__':
     setup(
-        name='aiida_verdi',
-        version='0.0.1',
+        name='aiida-verdi',
+        version='0.1.3',
         url='http://www.aiida.net/',
         license='MIT License',
         author="The AiiDA team",
@@ -21,7 +21,10 @@ if __name__ == '__main__':
             'Programming Language :: Python',
             'Programming Language :: Python :: 2',
         ],
-        install_requires=['aiida', 'click', 'click-plugins', 'click-completion', 'click-spinner', 'requests', 'reentry'],
+        setup_requires=['reentry', 'setuptools >= 18.5'],
+        reentry_scan_for=['aiida.cmdline'],
+        reentry_register=True,
+        install_requires=['aiida', 'click', 'click-plugins', 'click-completion', 'click-spinner', 'requests'],
         extras_require={
             'tests': ['pytest']
         },
