@@ -15,7 +15,7 @@ from aiida.cmdline.aiida_verdi import options, arguments
 @options.db_port(help='[if --non-interactive]: database port')
 @options.db_name(help='[if --non-interactive]: database name')
 @options.db_user(help='[if --non-interactive]: database user')
-@options.db_pass(default='', type=str, help='[if --non-interactive]: database user password')
+@options.db_pass(default='', help='[if --non-interactive]: database user password')
 @options.first_name(help='[if --non-interactive]: user first name')
 @options.last_name(help='[if --non-interactive]: user last name')
 @options.institution(help='[if --non-interactive]: user institution')
@@ -59,8 +59,8 @@ def setup(only_config, non_interactive, dry_run, **kwargs):
     # create the directories to store the configuration files
     create_base_dirs()
 
-    if settings_profile.AIIDADB_PROFILE and profile:
-        click.Error('the profile argument cannot be used if verdi is called with -p option: {} and {}'.format(settings_profile.AIIDADB_PROFILE, profile))
+    if settings_profile.AIIDADB_PROFILE and kwargs['profile']:
+        click.Error('the profile argument cannot be used if verdi is called with -p option: {} and {}'.format(settings_profile.AIIDADB_PROFILE, kwargs['profile']))
     gprofile = settings_profile.AIIDADB_PROFILE or kwargs['profile']
     if gprofile == kwargs['profile']:
         settings_profile.AIIDADB_PROFILE = kwargs['profile']
