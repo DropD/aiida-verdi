@@ -1,7 +1,7 @@
 #-*- coding: utf8 -*-
 """verdi setup command"""
 import click
-from aiida.cmdline.aiida_verdi import options, arguments
+from aiida_verdi import options, arguments
 
 
 @click.command('setup', short_help='Setup an AiiDA profile')
