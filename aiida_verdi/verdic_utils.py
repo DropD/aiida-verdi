@@ -118,7 +118,7 @@ def create_code(**kwargs):
 @aiida_dbenv
 def input_plugin_list():
     """return a list of available input plugins"""
-    from aiida.common.pluginloader import existing_plugins
+    from aiida.common.old_pluginloader import existing_plugins
     from aiida.orm.calculation.job import JobCalculation
     return [p.rsplit('.', 1)[0] for p in existing_plugins(JobCalculation, 'aiida.orm.calculation.job')]
 

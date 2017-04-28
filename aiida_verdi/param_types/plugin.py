@@ -42,7 +42,7 @@ class PluginParam(click.ParamType):
     @aiida_dbenv
     def old_get_calculations(self):
         """return all available input plugins"""
-        from aiida.common.pluginloader import existing_plugins
+        from aiida.common.old_pluginloader import existing_plugins
         from aiida.orm.calculation.job import JobCalculation
         return existing_plugins(
             JobCalculation, 'aiida.orm.calculation.job', suffix='Calculation')
@@ -50,21 +50,21 @@ class PluginParam(click.ParamType):
     @aiida_dbenv
     def old_get_parsers(self):
         """return all available parser plugins"""
-        from aiida.common.pluginloader import existing_plugins
+        from aiida.common.old_pluginloader import existing_plugins
         from aiida.parsers import Parser
         return existing_plugins(Parser, 'aiida.parsers.plugins')
 
     @aiida_dbenv
     def old_get_transports(self):
         """return all available transport plugins"""
-        from aiida.common.pluginloader import existing_plugins
+        from aiida.common.old_pluginloader import existing_plugins
         from aiida.transport import Transport
         return existing_plugins(Transport, 'aiida.transport.plugins')
 
     @aiida_dbenv
     def old_get_schedulers(self):
         """return all available scheduler plugins"""
-        from aiida.common.pluginloader import existing_plugins
+        from aiida.common.old_pluginloader import existing_plugins
         from aiida.scheduler import Scheduler
         return existing_plugins(Scheduler, 'aiida.scheduler.plugins')
 
@@ -72,7 +72,7 @@ class PluginParam(click.ParamType):
         """use entry points"""
         @aiida_dbenv
         def get_plugins():
-            from aiida.common.ep_pluginloader import all_plugins
+            from aiida.common.pluginloader import all_plugins
             return all_plugins(category)
         return get_plugins
 

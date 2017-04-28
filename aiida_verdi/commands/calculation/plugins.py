@@ -20,7 +20,7 @@ def plugins(input_plugin):
 
     from aiida.orm import CalculationFactory
     from aiida.orm.calculation.job import JobCalculation
-    from aiida.common.ep_pluginloader import all_plugins
+    from aiida.common.pluginloader import all_plugins
     from aiida.common.exceptions import MissingPluginError
 
     names = input_plugin

@@ -1,25 +1,27 @@
 #-*- coding: utf8 -*-
 """verdi setup command"""
 import click
+from aiida.cmdline.aiida_verdi import options, arguments
 
 
 @click.command('setup', short_help='Setup an AiiDA profile')
 @click.argument('profile', default='', metavar='PROFILE', type=str)  #, help='Profile Name to create/edit')
 @click.option('--only-config', is_flag=True, help='Do not create a new user')
-@click.option('--non-interactive', is_flag=True, help='never prompt the user for input, read values from options')
-@click.option('--backend', type=click.Choice(['django', 'sqlalchemy']), help='backend choice (ignored without --non-interactive)')
-@click.option('--email', metavar='EMAIL', type=str, help='valid email address for the user (ignored without --non-interactive)')
-@click.option('--db_host', metavar='HOSTNAME', type=str, help='database hostname (ignored without --non-interactive)')
-@click.option('--db_port', metavar='PORT', type=int, help='database port (ignored without --non-interactive)')
-@click.option('--db_name', metavar='DBNAME', type=str, help='database name (ignored without --non-interactive)')
-@click.option('--db_user', metavar='DBUSER', type=str, help='database username (ignored without --non-interactive)')
-@click.option('--db_pass', metavar='DBPASS', type=str, help='password for username to access the database (ignored without --non-interactive)')
-@click.option('--first-name', metavar='FIRST', type=str, help='your first name (ignored without --non-interactive)')
-@click.option('--last-name', metavar='LAST', type=str, help='your last name (ignored without --non-interactive)')
-@click.option('--institution', metavar='INSTITUTION', type=str, help='your institution (ignored without --non-interactive)')
+@options.non_interactive(help='run without user interactions, requires all non-flag options to be set. These options will be ignored without --non-interactive.')
+@options.dry_run(help='make no actual changes')
+@options.backend(help='[if --non-interactive]: backend choice')
+@options.email(help='[if --non-interactive]: user email address')
+@options.db_host(help='[if --non-interactive]: database hostname')
+@options.db_port(help='[if --non-interactive]: database port')
+@options.db_name(help='[if --non-interactive]: database name')
+@options.db_user(help='[if --non-interactive]: database user')
+@options.db_pass(help='[if --non-interactive]: database user password')
+@options.first_name(help='[if --non-interactive]: user first name')
+@options.last_name(help='[if --non-interactive]: user last name')
+@options.institution(help='[if --non-interactive]: user institution')
 @click.option('--no-password', is_flag=True, help='do not set a password (--non-interactive fails otherwise)')
-@click.option('--repo', metavar='PATH', type=click.Path(), help='data file repository (ignored without --non-interactive)')
-def setup(profile, only_config, non_interactive, backend, email, db_host, db_port, db_name, db_user, db_pass, first_name, last_name, institution, no_password, repo, **kwargs):
+@options.repo(help='[if --non-interactive]: data file repository')
+def setup(only_config, non_interactive, dry_run, **kwargs):
     '''
     Setup PROFILE for aiida for the current user
 
@@ -43,6 +45,15 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
     from aiida.cmdline import pass_to_django_manage, execname
     from aiida.common.exceptions import InvalidOperation
 
+    if non_interactive:
+        params = {i.name: i for i in setup.params}
+        required = ['profile', 'backend', 'email', 'db_host', 'db_port',
+                  'db_name', 'db_user', 'db_pass', 'first_name',
+                  'last_name', 'institution', 'no_password', 'repo']
+        for i in required:
+            if not kwargs[i]:
+                raise click.MissingParameter(param=params[i])
+
     only_user_config = only_config
 
     # create the directories to store the configuration files
@@ -50,9 +61,9 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
 
     if settings_profile.AIIDADB_PROFILE and profile:
         click.Error('the profile argument cannot be used if verdi is called with -p option: {} and {}'.format(settings_profile.AIIDADB_PROFILE, profile))
-    gprofile = settings_profile.AIIDADB_PROFILE or profile
-    if gprofile == profile:
-        settings_profile.AIIDADB_PROFILE = profile
+    gprofile = settings_profile.AIIDADB_PROFILE or kwargs['profile']
+    if gprofile == kwargs['profile']:
+        settings_profile.AIIDADB_PROFILE = kwargs['profile']
     if not settings_profile.AIIDADB_PROFILE:
         settings_profile.AIIDADB_PROFILE = 'default'
 
@@ -61,25 +72,25 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
 
     created_conf = None
     # ask and store the configuration of the DB
-    if non_interactive:
+    if non_interactive and not dry_run:
         try:
             created_conf = create_config_noninteractive(
                 profile=gprofile,
-                backend=backend,
-                email=email,
-                db_host=db_host,
-                db_port=db_port,
-                db_name=db_name,
-                db_user=db_user,
-                db_pass=db_pass,
-                repo=repo,
+                backend=kwargs['backend'],
+                email=kwargs['email'],
+                db_host=kwargs['db_host'],
+                db_port=kwargs['db_port'],
+                db_name=kwargs['db_name'],
+                db_user=kwargs['db_user'],
+                db_pass=kwargs['db_pass'],
+                repo=kwargs['repo'],
                 force_overwrite=kwargs.get('force_overwrite', False)
             )
         except ValueError as e:
             raise click.Error("Error during configuation: {}".format(e.message))
         except KeyError as e:
             raise click.Error("--non-interactive requires all values to be given on the commandline! {}".format(e.message))
-    else:
+    elif not dry_run:
         try:
             created_conf = create_configuration(profile=gprofile)
         except ValueError as e:
@@ -88,10 +99,14 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
         # set default DB profiles
         set_default_profile('verdi', gprofile, force_rewrite=False)
         set_default_profile('daemon', gprofile, force_rewrite=False)
+    else:
+        click.echo('Not creating profile (--dry-run recieved)')
 
     if only_user_config:
         click.echo("Only user configuration requested, "
                    "skipping the migrate command")
+    elif dry_run:
+        click.echo('Not executing database migration (--dry-run recieved)')
     else:
         click.echo("Executing now a migrate command...")
 
@@ -173,49 +188,54 @@ def setup(profile, only_config, non_interactive, backend, email, db_host, db_por
         else:
             raise InvalidOperation("Not supported backend selected.")
 
-    click.echo("Database was created successfully")
+    if not dry_run:
+        click.echo("Database was created successfully")
 
-    # I create here the default user
-    click.echo("Loading new environment...")
-    if only_user_config:
-        from aiida.backends.utils import load_dbenv, is_dbenv_loaded
-        # db environment has not been loaded in this case
-        if not is_dbenv_loaded():
-            load_dbenv()
+        # I create here the default user
+        click.echo("Loading new environment...")
+        if only_user_config:
+            from aiida.backends.utils import load_dbenv, is_dbenv_loaded
+            # db environment has not been loaded in this case
+            if not is_dbenv_loaded():
+                load_dbenv()
 
-    from aiida.common.setup import DEFAULT_AIIDA_USER
-    from aiida.orm.user import User as AiiDAUser
+        from aiida.common.setup import DEFAULT_AIIDA_USER
+        from aiida.orm.user import User as AiiDAUser
 
-    if not AiiDAUser.search_for_users(email=DEFAULT_AIIDA_USER):
-        click.echo("Installing default AiiDA user...")
-        nuser = AiiDAUser(email=DEFAULT_AIIDA_USER)
-        nuser.first_name = "AiiDA"
-        nuser.last_name = "Daemon"
-        nuser.is_staff = True
-        nuser.is_active = True
-        nuser.is_superuser = True
-        nuser.force_save()
+        if not AiiDAUser.search_for_users(email=DEFAULT_AIIDA_USER):
+            click.echo("Installing default AiiDA user...")
+            nuser = AiiDAUser(email=DEFAULT_AIIDA_USER)
+            nuser.first_name = "AiiDA"
+            nuser.last_name = "Daemon"
+            nuser.is_staff = True
+            nuser.is_active = True
+            nuser.is_superuser = True
+            nuser.force_save()
 
-    from aiida.common.utils import get_configured_user_email
-    email = get_configured_user_email()
-    click.echo("Starting user configuration for {}...".format(email))
-    if email == DEFAULT_AIIDA_USER:
-        click.echo("You set up AiiDA using the default Daemon email ({}),".format(
-            email))
-        click.echo("therefore no further user configuration will be asked.")
-    else:
-        # Ask to configure the new user
-        from aiida.cmdline.commands.user import configure as user_configure
-        if not non_interactive:
-            user_configure.invoke()
+        from aiida.common.utils import get_configured_user_email
+        email = get_configured_user_email()
+        click.echo("Starting user configuration for {}...".format(email))
+        if email == DEFAULT_AIIDA_USER:
+            click.echo("You set up AiiDA using the default Daemon email ({}),".format(
+                email))
+            click.echo("therefore no further user configuration will be asked.")
         else:
-            # or don't ask
-            user_configure.invoke(
-                email=kwargs['email'],
-                first_name=kwargs.get('first_name'),
-                last_name=kwargs.get('last_name'),
-                institution=kwargs.get('institution'),
-                no_password=True
-            )
+            # Ask to configure the new user
+            from aiida.cmdline.commands.user import configure as user_configure
+            if not non_interactive:
+                user_configure.invoke()
+            else:
+                # or don't ask
+                user_configure.invoke(
+                    email=kwargs['email'],
+                    first_name=kwargs.get('first_name'),
+                    last_name=kwargs.get('last_name'),
+                    institution=kwargs.get('institution'),
+                    no_password=True
+                )
+
+    if dry_run:
+        from aiida_verdi.commands.quicksetup import profile_info
+        click.echo(profile_info(gprofile, kwargs))
 
     click.echo("Setup finished.")

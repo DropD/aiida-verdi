@@ -16,7 +16,7 @@ def inputcat(calc, path):
     import os
 
     from aiida.cmdline.commands.node import cat_repo_files
-    from aiida.common.pluginloader import get_class_typestring
+    from aiida.common.old_pluginloader import get_class_typestring
 
     if path is None:
         path = calc._DEFAULT_INPUT_FILE
