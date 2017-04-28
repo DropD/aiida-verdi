@@ -15,7 +15,7 @@ from aiida.cmdline.aiida_verdi import options, arguments
 @options.db_port(help='[if --non-interactive]: database port')
 @options.db_name(help='[if --non-interactive]: database name')
 @options.db_user(help='[if --non-interactive]: database user')
-@options.db_pass(help='[if --non-interactive]: database user password')
+@options.db_pass(default='', type=str, help='[if --non-interactive]: database user password')
 @options.first_name(help='[if --non-interactive]: user first name')
 @options.last_name(help='[if --non-interactive]: user last name')
 @options.institution(help='[if --non-interactive]: user institution')
@@ -47,8 +47,8 @@ def setup(only_config, non_interactive, dry_run, **kwargs):
 
     if non_interactive:
         params = {i.name: i for i in setup.params}
-        required = ['profile', 'backend', 'email', 'db_host', 'db_port',
-                  'db_name', 'db_user', 'db_pass', 'first_name',
+        required = ['backend', 'email', 'db_host', 'db_port',
+                  'db_name', 'db_user', 'first_name',
                   'last_name', 'institution', 'no_password', 'repo']
         for i in required:
             if not kwargs[i]:
