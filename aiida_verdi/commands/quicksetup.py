@@ -370,7 +370,8 @@ def quicksetup(obj, non_interactive, dry_run, **kwargs):
         #'institution': kwargs['institution'],
         'force_overwrite': write_profile,
         'only-config': False,
-        'non_interactive': True
+        'non_interactive': True,
+        'no_password': True
     }
     if not dry_run:
         ctx = click.get_current_context()
