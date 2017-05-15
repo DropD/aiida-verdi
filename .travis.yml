@@ -20,6 +20,7 @@ env:
 install:
     - pip install -U pip wheel setuptools
     - pip install .[tests]
+    - pip install pytest
 
 before_script:
     - verdi-exp quicksetup --non-interactive --email=aiida@localhost --first-name=Aiida --last-name=Test --institution=EPFL --profile=$TEST_AIIDA_BACKEND --backend=$TEST_AIIDA_BACKEND --make-default --make-daemon
