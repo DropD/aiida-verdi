@@ -357,17 +357,17 @@ def quicksetup(obj, non_interactive, dry_run, **kwargs):
         repo = os.path.join(aiida_dir, repo)
 
     setup_args = {
-        'backend': kwargs['backend'],
-        'email': kwargs['email'],
+        #'backend': kwargs['backend'],
+        #'email': kwargs['email'],
         'db_host': dbhost,
         'db_port': dbport,
         'db_name': dbname,
         'db_user': dbuser,
         'db_pass': dbpass,
         'repo': repo,
-        'first_name': kwargs['first_name'],
-        'last_name': kwargs['last_name'],
-        'institution': kwargs['institution'],
+        #'first_name': kwargs['first_name'],
+        #'last_name': kwargs['last_name'],
+        #'institution': kwargs['institution'],
         'force_overwrite': write_profile,
         'only-config': False,
         'non_interactive': True
@@ -375,7 +375,7 @@ def quicksetup(obj, non_interactive, dry_run, **kwargs):
     if not dry_run:
         ctx = click.get_current_context()
         #setup.invoke(profile_name, **setup_args)
-        ctx.forward(setup)
+        ctx.forward(setup, **setup_args)
     else:
         click.echo('profile not written (--dry-run recieved)')
         click.echo(profile_info(profile_name, setup_args))
