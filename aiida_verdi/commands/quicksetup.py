@@ -369,11 +369,13 @@ def quicksetup(obj, non_interactive, dry_run, **kwargs):
         'last_name': kwargs['last_name'],
         'institution': kwargs['institution'],
         'force_overwrite': write_profile,
-        'only_config': False,
+        'only-config': False,
         'non_interactive': True
     }
     if not dry_run:
-        setup.invoke(profile_name, **setup_args)
+        ctx = click.get_current_context()
+        #setup.invoke(profile_name, **setup_args)
+        ctx.forward(setup)
     else:
         click.echo('profile not written (--dry-run recieved)')
         click.echo(profile_info(profile_name, setup_args))
