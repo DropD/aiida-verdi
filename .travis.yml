@@ -1,0 +1,27 @@
+#dist: trusty
+#sudo: false
+
+language: python
+
+python:
+    - "2.7"
+
+services:
+    - postgresql
+
+addons:
+    postgresql: "9.5"
+
+env: 
+    - TEST_AIIDA_BACKEND=django
+    - TEST_AIIDA_BACKEND=sqlalchemy
+
+install:
+    - pip install -U pip wheel setuptools
+    - pip install .
+
+before_script:
+    - verdi-exp quicksetup --non-interactive --email=aiida@localhost --first-name=Aiida --last-name=Test --institution=EPFL --profile=$TEST_AIIDA_BACKEND --backend=$TEST_AIIDA_BACKEND --make-default --make-daemon
+
+
+script: pytest
